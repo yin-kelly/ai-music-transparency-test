@@ -236,7 +236,7 @@ function App() {
               }}>
                 THE TRANSPARENCY<br/>TEST
               </h1>
-              <p className="text-pink-400 mt-2 text-sm font-mono uppercase tracking-wider">Can machines fool the human ear?</p>
+              <p className="text-pink-400 mt-2 text-sm font-mono uppercase tracking-wider">Can AI fool the human listeners?</p>
             </div>
             <VinylRecord isPlaying={isPlaying} size="medium" />
           </div>
@@ -269,7 +269,7 @@ function App() {
                 </p>
                 <p>
                   This study explores whether listeners can distinguish AI-generated music from human creativity, 
-                  and whether <span className="font-bold text-white">transparency changes perception</span>.
+                  and whether <span className="font-bold text-white">transparency changes perception and attitudes.</span>.
                 </p>
               </div>
 
@@ -297,7 +297,7 @@ function App() {
                     <AlertCircle className="text-purple-400 flex-shrink-0 mt-1" size={20} />
                     <div>
                       <div className="font-bold text-white">Phase 3</div>
-                      <div className="text-gray-400">Truth revealed</div>
+                      <div className="text-gray-400">Reveal</div>
                     </div>
                   </div>
                   <div className="flex items-start gap-2">
@@ -325,7 +325,7 @@ function App() {
                   <div className="font-mono">~12 minutes</div>
                   <div className="flex items-center gap-1">
                     <Users size={14} />
-                    127 participants
+                    27 participants
                   </div>
                 </div>
               </div>
@@ -393,7 +393,7 @@ function App() {
               {/* Choices */}
               <div className="space-y-6">
                 <div className="bg-pink-500/10 border-l-4 border-pink-500 p-6">
-                  <p className="text-xl font-bold mb-2">Your Call:</p>
+                  <p className="text-xl font-bold mb-2">Decide:</p>
                   <p className="text-gray-400">Is this AI-generated, human-made, or hybrid?</p>
                 </div>
 
@@ -879,11 +879,11 @@ function App() {
                 </div>
                 <div className="flex items-start gap-3">
                   <div className="w-2 h-2 rounded-full bg-cyan-500 mt-3 flex-shrink-0" />
-                  <p className="text-gray-300"><span className="font-black text-white">Genre matters:</span> Lo-fi hardest to detect, country easiest</p>
+                  <p className="text-gray-300"><span className="font-black text-white">It can be dependent on genre.</span> Lo-fi hardest to detect, country easiest</p>
                 </div>
                 <div className="flex items-start gap-3">
                   <div className="w-2 h-2 rounded-full bg-purple-500 mt-3 flex-shrink-0" />
-                  <p className="text-gray-300">Transparency changes perception: ratings drop <span className="font-black text-white">24% for AI music</span> once origin is known</p>
+                  <p className="text-gray-300">Having transparency changes listeners' perception of the music: ratings drop <span className="font-black text-white">24% for AI music</span> once origin is known</p>
                 </div>
                 <div className="flex items-start gap-3">
                   <div className="w-2 h-2 rounded-full bg-yellow-500 mt-3 flex-shrink-0" />
@@ -1018,7 +1018,7 @@ function App() {
                       </div>
                       <div className="bg-yellow-500/10 border-l-4 border-yellow-500 p-6 mt-6">
                         <p className="text-gray-300">
-                          <span className="font-black text-white">Framework:</span> Distinguish between AI as a <em>tool</em> (augmenting human creativity) 
+                          <span className="font-black text-white">Framework:</span> Distinguish between AI as a <em>tool</em> (supplementing human creativity) 
                           versus AI as <em>replacement</em> (displacing human artists). Policy should enable the former while 
                           regulating the latter through transparency requirements.
                         </p>
@@ -1043,39 +1043,15 @@ function App() {
               ))}
             </div>
 
-            {/* Implementation path */}
-            <div className="bg-gradient-to-br from-gray-900 to-black border-4 border-white p-10 rounded-none shadow-[16px_16px_0px_0px_rgba(255,255,255,0.1)]">
-              <h3 className="text-3xl font-black uppercase mb-8">Implementation Path</h3>
-              <div className="space-y-6">
-                {[
-                  { phase: "Phase 1", time: "0-6 months", action: "Industry working group develops technical standards for labeling", color: "#FF6B9D" },
-                  { phase: "Phase 2", time: "6-12 months", action: "Voluntary adoption by major platforms with public reporting", color: "#4ECDC4" },
-                  { phase: "Phase 3", time: "12-18 months", action: "FTC enforcement action under Section 5 for non-compliant platforms", color: "#AA96DA" },
-                  { phase: "Backup", time: "If needed", action: "Federal legislation requiring AI content labeling across all platforms", color: "#FFD93D" }
-                ].map((item, i) => (
-                  <div key={i} className="flex items-start gap-6">
-                    <div className="w-24 flex-shrink-0">
-                      <div className="font-black text-sm uppercase" style={{ color: item.color }}>{item.phase}</div>
-                      <div className="text-xs text-gray-600 font-mono">{item.time}</div>
-                    </div>
-                    <div className="flex-1 bg-black/50 border-l-4 p-4" style={{ borderColor: item.color }}>
-                      <p className="text-gray-300">{item.action}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Bottom line */}
+        
+            {/* Conclusion */}
             <div className="bg-gradient-to-r from-pink-500 to-cyan-500 p-1 rounded-none">
               <div className="bg-black p-10">
                 <h4 className="text-3xl font-black mb-4 uppercase">The Bottom Line</h4>
                 <p className="text-xl text-gray-300 leading-relaxed">
-                  This research demonstrates that listeners <span className="font-black text-white">cannot reliably detect AI music</span>, 
-                  yet <span className="font-black text-white">strongly support transparency</span>. Mandatory labeling protects consumer choice, 
-                  supports human artists, and enables responsible AI innovation. The technology exists, public support is clear, 
-                  and the policy path is straightforward. The question is not <em>whether</em> platforms should label AI music, 
-                  but <span className="font-black text-white">when they will start</span>.
+                  This research demonstrates that listeners <span className="font-black text-white">cannot reliably detect AI music</span> and 
+                  <span className="font-black text-white">strongly support transparency</span>. Mandatory labeling protects consumer choice, 
+                  supports human artists, and enables responsible AI innovation.
                 </p>
               </div>
             </div>
