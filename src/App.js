@@ -4,14 +4,14 @@ import { Play, Pause, RotateCcw, ChevronRight, Disc3, Sparkles, Users, AlertCirc
 
 // MOCK DATA
 const SONGS = [
-  { id: 1, title: "Summer Nights", genre: "Pop", actualType: "ai", audioUrl: "YOUR_AUDIO_URL_1.mp3", color: "#FF6B9D" },
-  { id: 2, title: "Growing Pains", genre: "Indie", actualType: "human", audioUrl: "YOUR_AUDIO_URL_2.mp3", color: "#4ECDC4" },
-  { id: 3, title: "Midnight Study", genre: "Lo-fi", actualType: "ai", audioUrl: "YOUR_AUDIO_URL_3.mp3", color: "#95E1D3" },
-  { id: 4, title: "Dusty Roads", genre: "Country", actualType: "human", audioUrl: "YOUR_AUDIO_URL_4.mp3", color: "#F38181" },
-  { id: 5, title: "Ethereal Dreams", genre: "Ambient", actualType: "ai", audioUrl: "YOUR_AUDIO_URL_5.mp3", color: "#AA96DA" },
-  { id: 6, title: "Coffee Shop Groove", genre: "Indie", actualType: "hybrid", audioUrl: "YOUR_AUDIO_URL_6.mp3", color: "#FCBAD3" },
-  { id: 7, title: "Neon Lights", genre: "Pop", actualType: "human", audioUrl: "YOUR_AUDIO_URL_7.mp3", color: "#FFFFD2" },
-  { id: 8, title: "Forest Path", genre: "Folk", actualType: "ai", audioUrl: "YOUR_AUDIO_URL_8.mp3", color: "#A8D8EA" },
+  { id: 1, title: "Song 1 (to be added soon)", genre: "Pop", actualType: "ai", audioUrl: "YOUR_AUDIO_URL_1.mp3", color: "#FF6B9D" },
+  { id: 2, title: "Song 2 (to be added soon)", genre: "Indie", actualType: "human", audioUrl: "YOUR_AUDIO_URL_2.mp3", color: "#4ECDC4" },
+  { id: 3, title: "Song 3 (to be added soon)", genre: "Lo-fi", actualType: "ai", audioUrl: "YOUR_AUDIO_URL_3.mp3", color: "#95E1D3" },
+  { id: 4, title: "Song 4 (to be added soon)", genre: "Country", actualType: "human", audioUrl: "YOUR_AUDIO_URL_4.mp3", color: "#F38181" },
+  { id: 5, title: "Song 5 (to be added soon)", genre: "Ambient", actualType: "ai", audioUrl: "YOUR_AUDIO_URL_5.mp3", color: "#AA96DA" },
+  { id: 6, title: "Song 6 (to be added soon)", genre: "Indie", actualType: "hybrid", audioUrl: "YOUR_AUDIO_URL_6.mp3", color: "#FCBAD3" },
+  { id: 7, title: "Song 7 (to be added soon)", genre: "Pop", actualType: "human", audioUrl: "YOUR_AUDIO_URL_7.mp3", color: "#FFFFD2" },
+  { id: 8, title: "Song 8 (to be added soon)", genre: "Folk", actualType: "ai", audioUrl: "YOUR_AUDIO_URL_8.mp3", color: "#A8D8EA" },
 ];
 
 const AGGREGATE_DATA = {
@@ -1119,9 +1119,7 @@ function App() {
             </div>
             <div className="text-right">
               <p className="text-gray-400">Kelly Yin</p>
-              <p className="text-gray-600 text-sm">Duke University</p>
-              <p className="text-gray-600 text-sm">Cybersecurity & National Security Law/Policy Capstone</p>
-              <p className="text-gray-600 text-sm font-mono">2026</p>
+              <p className="text-gray-600 text-sm">CS 255 Final Project</p>
             </div>
           </div>
         </div>
