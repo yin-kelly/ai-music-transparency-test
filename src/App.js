@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, PieChart, Pie, Cell, ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from 'recharts';
-import { Play, Pause, RotateCcw, ChevronRight, Volume2, Disc3, Radio, Sparkles, TrendingDown, Users, AlertCircle, CheckCircle2, XCircle, Headphones, Music2, BrainCircuit, Eye } from 'lucide-react';
+import { Play, Pause, RotateCcw, ChevronRight, Disc3, Sparkles, Users, AlertCircle, CheckCircle2, XCircle, Headphones, Music2, BrainCircuit, Eye } from 'lucide-react';
 
 // MOCK DATA
 const SONGS = [
