@@ -6,14 +6,12 @@ import { collection, addDoc, getDocs } from 'firebase/firestore';
 
 // MOCK DATA
 const SONGS = [
-  { id: 1, title: "Song 1 (to be added soon)", genre: "Pop", actualType: "ai", audioUrl: "YOUR_AUDIO_URL_1.mp3", color: "#FF6B9D" },
-  { id: 2, title: "Song 2 (to be added soon)", genre: "Indie", actualType: "human", audioUrl: "YOUR_AUDIO_URL_2.mp3", color: "#4ECDC4" },
-  { id: 3, title: "Song 3 (to be added soon)", genre: "Lo-fi", actualType: "ai", audioUrl: "YOUR_AUDIO_URL_3.mp3", color: "#95E1D3" },
-  { id: 4, title: "Song 4 (to be added soon)", genre: "Country", actualType: "human", audioUrl: "YOUR_AUDIO_URL_4.mp3", color: "#F38181" },
-  { id: 5, title: "Song 5 (to be added soon)", genre: "Ambient", actualType: "ai", audioUrl: "YOUR_AUDIO_URL_5.mp3", color: "#AA96DA" },
-  { id: 6, title: "Song 6 (to be added soon)", genre: "Indie", actualType: "hybrid", audioUrl: "YOUR_AUDIO_URL_6.mp3", color: "#FCBAD3" },
-  { id: 7, title: "Song 7 (to be added soon)", genre: "Pop", actualType: "human", audioUrl: "YOUR_AUDIO_URL_7.mp3", color: "#FFFFD2" },
-  { id: 8, title: "Song 8 (to be added soon)", genre: "Folk", actualType: "ai", audioUrl: "YOUR_AUDIO_URL_8.mp3", color: "#A8D8EA" },
+  { id: 1, title: "Song 1 (to be added soon)", genre: "Pop", actualType: "ai", audioUrl: "https://github.com/yin-kelly/ai-music-transparency-test/raw/main/public/audio/ai-1.mp3", color: "#FF6B9D" },
+  { id: 2, title: "Song 2 (to be added soon)", genre: "Indie", actualType: "human", audioUrl: "https://github.com/yin-kelly/ai-music-transparency-test/raw/main/public/audio/human-2.mp3", color: "#4ECDC4" },
+  { id: 3, title: "Song 3 (to be added soon)", genre: "Lo-fi", actualType: "ai", audioUrl: "https://github.com/yin-kelly/ai-music-transparency-test/raw/main/public/audio/ai-3.mp3", color: "#95E1D3" },
+  { id: 4, title: "Song 4 (to be added soon)", genre: "Country", actualType: "ai", audioUrl: "https://github.com/yin-kelly/ai-music-transparency-test/raw/main/public/audio/ai-4.mp3", color: "#F38181" },
+  { id: 5, title: "Song 5 (to be added soon)", genre: "Ambient", actualType: "human", audioUrl: "https://github.com/yin-kelly/ai-music-transparency-test/raw/main/public/audio/human-5.mp3", color: "#AA96DA" },
+  { id: 6, title: "Song 6 (to be added soon)", genre: "Indie", actualType: "hybrid", audioUrl: "https://github.com/yin-kelly/ai-music-transparency-test/raw/main/public/audio/hybrid-6.mp3", color: "#FCBAD3" },
 ];
 
 const AGGREGATE_DATA = {
@@ -40,10 +38,7 @@ const AGGREGATE_DATA = {
   ],
   radarData: [
     { dimension: 'Enjoyment', ai: 68, human: 79 },
-    { dimension: 'Creativity', ai: 52, human: 85 },
-    { dimension: 'Emotional\nImpact', ai: 45, human: 82 },
-    { dimension: 'Technical\nQuality', ai: 78, human: 73 },
-    { dimension: 'Authenticity', ai: 38, human: 91 }
+    { dimension: 'Creativity', ai: 52, human: 85 }
   ]
 };
 
@@ -106,6 +101,8 @@ function App() {
   const [responses, setResponses] = useState({});
   const [ratings, setRatings] = useState({});
   const [revealedRatings, setRevealedRatings] = useState({});
+  const [labelingSupport, setLabelingSupport] = useState(null);
+  const [continueListening, setContinueListening] = useState({});
   const [quizPhase, setQuizPhase] = useState('identify');
   const [isPlaying, setIsPlaying] = useState(false);
   const [participantCount, setParticipantCount] = useState(0);
@@ -192,15 +189,20 @@ const [aggregateData, setAggregateData] = useState(null);
     setIsPlaying(false);
     if (audioRef.current) audioRef.current.pause();
   } else {
-    // Save to Firebase
-    await saveResponseToFirebase();
-    
-    // Load aggregate data
-    await loadAggregateData();
-    
-    setQuizPhase('complete');
-    setSection('results');
+    setQuizPhase('survey');  // Change to survey instead of results
+    setCurrentSongIndex(0);
   }
+};
+
+const handleSurveySubmit = async () => {
+  // Save to Firebase
+  await saveResponseToFirebase();
+  
+  // Load aggregate data
+  await loadAggregateData();
+  
+  setQuizPhase('complete');
+  setSection('results');
 };
 
   const calculateAccuracy = () => {
@@ -215,11 +217,13 @@ const [aggregateData, setAggregateData] = useState(null);
 const saveResponseToFirebase = async () => {
   try {
     await addDoc(collection(db, 'responses'), {
-      identifications: responses,
-      initialRatings: ratings,
-      revealedRatings: revealedRatings,
-      timestamp: new Date().toISOString()
-    });
+  identifications: responses,
+  initialRatings: ratings,
+  revealedRatings: revealedRatings,
+  continueListening: continueListening,
+  labelingSupport: labelingSupport,
+  timestamp: new Date().toISOString()
+});
     console.log("Saved!");
   } catch (error) {
     console.error("Error:", error);
@@ -235,18 +239,17 @@ const loadAggregateData = async () => {
     setParticipantCount(allResponses.length);
     
     if (allResponses.length === 0) {
-  setAggregateData({
-    accuracy: { overall: 0, byGenre: [] },
-    preferenceShift: [],
-    radarData: [],
-    labelingSupport: []
-  });
+      setAggregateData({
+        accuracy: { overall: 0, byGenre: [] },
+        preferenceShift: [],
+        radarData: [],
+        labelingSupport: []
+      });
     } else {
       setAggregateData(calculateAggregateData(allResponses));
     }
   } catch (error) {
     console.error("Error:", error);
-  } finally {
   }
 };
 
@@ -271,14 +274,43 @@ const calculateAggregateData = (allResponses) => {
       const song = SONGS.find(s => s.id === parseInt(songId));
       const rev = r.revealedRatings[songId];
       if (song && init.enjoyment && rev?.enjoyment) {
-        preferenceData[song.actualType].before.push((init.enjoyment + init.creativity + init.emotional) / 3);
-        preferenceData[song.actualType].after.push((rev.enjoyment + rev.creativity + rev.emotional) / 3);
+        preferenceData[song.actualType].before.push((init.enjoyment + init.creativity) / 2);
+        preferenceData[song.actualType].after.push((rev.enjoyment + rev.creativity) / 2);
       }
     });
   });
 
   const avg = (arr) => arr.length > 0 ? arr.reduce((a,b) => a+b, 0) / arr.length : 0;
   
+  // Calculate labeling support percentages
+  const supportCounts = { strongly_support: 0, somewhat_support: 0, neutral: 0, oppose: 0 };
+  allResponses.forEach(r => {
+    if (r.labelingSupport) supportCounts[r.labelingSupport]++;
+  });
+
+  const total = allResponses.length;
+  const labelingSupport = [
+    { name: 'Strongly Support', value: total > 0 ? Math.round((supportCounts.strongly_support / total) * 100) : 68, fill: '#FF6B9D' },
+    { name: 'Somewhat Support', value: total > 0 ? Math.round((supportCounts.somewhat_support / total) * 100) : 23, fill: '#4ECDC4' },
+    { name: 'Neutral', value: total > 0 ? Math.round((supportCounts.neutral / total) * 100) : 6, fill: '#95E1D3' },
+    { name: 'Oppose', value: total > 0 ? Math.round((supportCounts.oppose / total) * 100) : 3, fill: '#F38181' }
+  ];
+  // Calculate continue listening data
+const continueListeningCounts = { unlikely: 0, neutral: 0, likely: 0 };
+allResponses.forEach(r => {
+  Object.entries(r.continueListening || {}).forEach(([songId, value]) => {
+    if (value <= 2) continueListeningCounts.unlikely++;
+    else if (value === 3) continueListeningCounts.neutral++;
+    else continueListeningCounts.likely++;
+  });
+});
+
+const totalCL = continueListeningCounts.unlikely + continueListeningCounts.neutral + continueListeningCounts.likely;
+const continueListeningData = [
+  { category: 'Unlikely', percentage: totalCL > 0 ? Math.round((continueListeningCounts.unlikely / totalCL) * 100) : 33 },
+  { category: 'Neutral', percentage: totalCL > 0 ? Math.round((continueListeningCounts.neutral / totalCL) * 100) : 33 },
+  { category: 'Likely', percentage: totalCL > 0 ? Math.round((continueListeningCounts.likely / totalCL) * 100) : 34 }
+];
   return {
     accuracy: {
       overall: totalGuesses > 0 ? Math.round((totalCorrect / totalGuesses) * 100) : 0,
@@ -293,7 +325,9 @@ const calculateAggregateData = (allResponses) => {
       { category: 'Human Music', before: parseFloat(avg(preferenceData.human.before).toFixed(1)) || 0, after: parseFloat(avg(preferenceData.human.after).toFixed(1)) || 0 },
       { category: 'Hybrid', before: parseFloat(avg(preferenceData.hybrid.before).toFixed(1)) || 0, after: parseFloat(avg(preferenceData.hybrid.after).toFixed(1)) || 0 }
     ],
-    radarData: AGGREGATE_DATA.radarData
+    radarData: AGGREGATE_DATA.radarData,
+    labelingSupport: labelingSupport,
+    continueListeningData: continueListeningData
   };
 };
 
@@ -475,7 +509,6 @@ const displayData = aggregateData || AGGREGATE_DATA;;
                     <h4 className="text-3xl font-black mb-1" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
                       {currentSong.title}
                     </h4>
-                    <p className="text-gray-500 uppercase text-sm tracking-widest font-bold mb-6">{currentSong.genre}</p>
                     
                     <Waveform isPlaying={isPlaying} color={currentSong.color} />
                     
@@ -559,7 +592,6 @@ const displayData = aggregateData || AGGREGATE_DATA;;
                     
                     <div className="mt-6 text-center w-full">
                       <h4 className="text-2xl font-black mb-1">{currentSong.title}</h4>
-                      <p className="text-gray-500 uppercase text-xs tracking-widest font-bold mb-4">{currentSong.genre}</p>
                       
                       <audio ref={audioRef} onEnded={() => setIsPlaying(false)}>
                         <source src={currentSong.audioUrl} type="audio/mpeg" />
@@ -580,8 +612,7 @@ const displayData = aggregateData || AGGREGATE_DATA;;
               <div className="lg:col-span-3 space-y-8">
                 {[
                   { key: 'enjoyment', label: 'Enjoyment', question: 'How much did you enjoy this?', color: '#FF6B9D' },
-                  { key: 'creativity', label: 'Creativity', question: 'How creative is this song?', color: '#4ECDC4' },
-                  { key: 'emotional', label: 'Emotional Impact', question: 'How emotionally resonant is this?', color: '#AA96DA' }
+                  { key: 'creativity', label: 'Creativity', question: 'How creative is this song?', color: '#4ECDC4' }
                 ].map(({ key, label, question, color }) => (
                   <div key={key} className="bg-black border-4 border-gray-800 p-6 rounded-none">
                     <div className="mb-4">
@@ -620,7 +651,7 @@ const displayData = aggregateData || AGGREGATE_DATA;;
 
                 <button
                   onClick={handleNextRating}
-                  disabled={!ratings[currentSong.id] || Object.keys(ratings[currentSong.id]).length < 3}
+                  disabled={!ratings[currentSong.id] || Object.keys(ratings[currentSong.id]).length < 2}
                   className="w-full bg-cyan-500 hover:bg-cyan-600 disabled:bg-gray-800 disabled:cursor-not-allowed text-black disabled:text-gray-600 font-black text-xl py-6 px-8 rounded-none border-4 border-black disabled:border-gray-700 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all uppercase tracking-wider flex items-center justify-center gap-2"
                 >
                   {currentSongIndex < SONGS.length - 1 ? 'Next Song' : 'Continue'}
@@ -659,7 +690,6 @@ const displayData = aggregateData || AGGREGATE_DATA;;
                     <VinylRecord isPlaying={isPlaying} color={currentSong.color} size="medium" />
                     <div className="mt-4 text-center">
                       <h4 className="text-2xl font-black">{currentSong.title}</h4>
-                      <p className="text-gray-500 uppercase text-xs tracking-widest">{currentSong.genre}</p>
                     </div>
                     <audio ref={audioRef} onEnded={() => setIsPlaying(false)}>
                       <source src={currentSong.audioUrl} type="audio/mpeg" />
@@ -721,8 +751,7 @@ const displayData = aggregateData || AGGREGATE_DATA;;
               <div className="space-y-6">
                 {[
                   { key: 'enjoyment', label: 'Enjoyment', color: '#FF6B9D' },
-                  { key: 'creativity', label: 'Creativity', color: '#4ECDC4' },
-                  { key: 'emotional', label: 'Emotional Impact', color: '#AA96DA' }
+                  { key: 'creativity', label: 'Creativity', color: '#4ECDC4' }
                 ].map(({ key, label, color }) => (
                   <div key={key} className="bg-black border-4 border-gray-800 p-6 rounded-none">
                     <div className="flex items-center justify-between mb-4">
@@ -757,9 +786,45 @@ const displayData = aggregateData || AGGREGATE_DATA;;
                   </div>
                 ))}
 
+                {/* Continue listening question - only for AI/Hybrid */}
+{(currentSong.actualType === 'ai' || currentSong.actualType === 'hybrid') && (
+  <div className="bg-black border-4 border-yellow-500 p-6 rounded-none">
+    <div className="mb-4">
+      <div className="flex items-center gap-3 mb-2">
+        <AlertCircle className="text-yellow-500" size={24} />
+        <h5 className="font-black text-xl uppercase tracking-tight">Continue Listening?</h5>
+      </div>
+      <p className="text-gray-400 text-sm">Now that you know the origins of this song, how likely are you to continue listening to it?</p>
+    </div>
+    
+    <div className="grid grid-cols-5 gap-2">
+      {[
+        { value: 1, label: 'Very Unlikely' },
+        { value: 2, label: 'Unlikely' },
+        { value: 3, label: 'Neutral' },
+        { value: 4, label: 'Likely' },
+        { value: 5, label: 'Very Likely' }
+      ].map(({ value, label }) => (
+        <button
+          key={value}
+          onClick={() => setContinueListening({ ...continueListening, [currentSong.id]: value })}
+          className={`p-4 border-3 rounded-none transition-all ${
+            continueListening[currentSong.id] === value
+              ? 'border-yellow-500 bg-yellow-500/20 scale-105'
+              : 'border-gray-700 hover:border-gray-500'
+          }`}
+        >
+          <div className="font-black text-lg mb-1">{value}</div>
+          <div className="text-xs text-gray-400">{label}</div>
+        </button>
+      ))}
+    </div>
+  </div>
+)}
+
                 <button
                   onClick={handleNextReveal}
-                  disabled={!revealedRatings[currentSong.id] || Object.keys(revealedRatings[currentSong.id]).length < 3}
+                  disabled={!revealedRatings[currentSong.id] || Object.keys(revealedRatings[currentSong.id]).length < 2 || ((currentSong.actualType === 'ai' || currentSong.actualType === 'hybrid') && !continueListening[currentSong.id])}
                   className="w-full bg-yellow-500 hover:bg-yellow-600 disabled:bg-gray-800 text-black disabled:text-gray-600 font-black text-xl py-6 rounded-none border-4 border-black disabled:border-gray-700 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] transition-all uppercase flex items-center justify-center gap-2"
                 >
                   {currentSongIndex < SONGS.length - 1 ? 'Next Song' : 'See Results'}
@@ -769,6 +834,72 @@ const displayData = aggregateData || AGGREGATE_DATA;;
             </div>
           </div>
         )}
+
+        {section === 'quiz' && quizPhase === 'survey' && (
+  <div className="max-w-3xl mx-auto">
+    <div className="text-center mb-12">
+      <div className="inline-block bg-purple-500/20 border-2 border-purple-500 px-6 py-3 rounded-full mb-6">
+        <span className="text-purple-400 font-bold uppercase tracking-wider">Survey</span>
+      </div>
+      <h2 className="text-5xl font-black mb-4" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+        Should AI Music<br/>Be <span style={{ 
+          background: 'linear-gradient(135deg, #FF6B9D 0%, #4ECDC4 100%)',
+          WebkitBackgroundClip: 'text',
+          WebkitTextFillColor: 'transparent'
+        }}>Labeled?</span>
+      </h2>
+      <p className="text-xl text-gray-400">
+        Now that you've experienced how difficult it can be to identify AI music,<br/>
+        do you support mandatory labeling of AI music on streaming platforms?
+      </p>
+    </div>
+
+    <div className="bg-gradient-to-br from-gray-900 to-black border-4 border-purple-500 p-10 rounded-none shadow-[16px_16px_0px_0px_rgba(170,150,218,0.3)]">
+      <div className="space-y-4">
+        {[
+  { value: 'ai_only', label: 'AI-Generated Only', emoji: '🤖', color: '#FF6B9D', desc: 'Label only fully AI-generated tracks' },
+  { value: 'ai_and_assisted', label: 'AI-Generated & Assisted', emoji: '⚙️', color: '#4ECDC4', desc: 'Label AI-generated and AI-assisted tracks' },
+  { value: 'neutral', label: 'Neutral', emoji: '🤷', color: '#95E1D3', desc: "I don't have a strong opinion" },
+  { value: 'dont_support', label: "Don't Support", emoji: '❌', color: '#F38181', desc: 'Labeling is unnecessary' }
+].map(({ value, label, emoji, color, desc }) => (
+          <button
+            key={value}
+            onClick={() => setLabelingSupport(value)}
+            className={`group w-full bg-black border-4 p-6 rounded-none transition-all text-left ${
+              labelingSupport === value 
+                ? 'border-white shadow-[8px_8px_0px_0px_rgba(255,255,255,0.3)] scale-[1.02]' 
+                : 'border-gray-700 hover:border-gray-500'
+            }`}
+            style={{
+              backgroundColor: labelingSupport === value ? `${color}20` : 'black'
+            }}
+          >
+            <div className="flex items-center gap-4">
+              <div className="text-5xl">{emoji}</div>
+              <div className="flex-1">
+                <div className="font-black text-2xl mb-1" style={{ color: labelingSupport === value ? color : 'white' }}>
+                  {label}
+                </div>
+                <div className="text-gray-400 text-sm">{desc}</div>
+              </div>
+              {labelingSupport === value && (
+                <CheckCircle2 className="text-white flex-shrink-0" size={32} />
+              )}
+            </div>
+          </button>
+        ))}
+      </div>
+
+      <button
+        onClick={handleSurveySubmit}
+        disabled={!labelingSupport}
+        className="mt-8 w-full bg-purple-500 hover:bg-purple-600 disabled:bg-gray-800 disabled:cursor-not-allowed text-white disabled:text-gray-600 font-black text-xl py-6 rounded-none border-4 border-black disabled:border-gray-700 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] hover:shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] transition-all uppercase tracking-wider"
+      >
+        See Results →
+      </button>
+    </div>
+  </div>
+)}
 
         {section === 'results' && (
           <div className="space-y-16">
@@ -823,33 +954,29 @@ const displayData = aggregateData || AGGREGATE_DATA;;
 
             {/* Data visualizations */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              {/* Accuracy by genre */}
-              <div className="bg-gradient-to-br from-gray-900 to-black border-4 border-pink-500 p-8 rounded-none shadow-[12px_12px_0px_0px_rgba(255,107,157,0.2)]">
-                <h3 className="text-2xl font-black mb-6 uppercase">Accuracy by Genre</h3>
-                <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={displayData.accuracy.byGenre || []}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#333" />
-                    <XAxis dataKey="genre" stroke="#888" style={{ fontSize: '12px', fontWeight: 'bold' }} />
-                    <YAxis stroke="#888" style={{ fontSize: '12px' }} />
-                    <Tooltip 
-                      contentStyle={{ 
-                        backgroundColor: '#000', 
-                        border: '2px solid #FF6B9D',
-                        borderRadius: 0,
-                        fontWeight: 'bold'
-                      }}
-                    />
-                    <Bar dataKey="accuracy" radius={[0, 0, 0, 0]}>
-                      {(displayData?.accuracy?.byGenre || []).map((entry, index) => (
-  <Cell key={`cell-${index}`} fill={entry.fill} />
-))}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-                <p className="text-sm text-gray-500 mt-4 font-mono">
-                  💡 Lo-fi was hardest to identify (48%), country easiest (65%)
-                </p>
-              </div>
+              {/* Continue Listening */}
+<div className="bg-gradient-to-br from-gray-900 to-black border-4 border-yellow-500 p-8 rounded-none shadow-[12px_12px_0px_0px_rgba(255,217,61,0.2)]">
+  <h3 className="text-2xl font-black mb-6 uppercase">Willingness to Continue Listening</h3>
+  <ResponsiveContainer width="100%" height={300}>
+    <BarChart data={displayData.continueListeningData || []}>
+      <CartesianGrid strokeDasharray="3 3" stroke="#333" />
+      <XAxis dataKey="category" stroke="#888" style={{ fontSize: '12px', fontWeight: 'bold' }} />
+      <YAxis stroke="#888" style={{ fontSize: '12px' }} />
+      <Tooltip 
+        contentStyle={{ 
+          backgroundColor: '#000', 
+          border: '2px solid #FFD93D',
+          borderRadius: 0,
+          fontWeight: 'bold'
+        }}
+      />
+      <Bar dataKey="percentage" fill="#FFD93D" />
+    </BarChart>
+  </ResponsiveContainer>
+  <p className="text-sm text-gray-500 mt-4 font-mono">
+    💡 After learning the truth, X% are unlikely to continue listening to AI music
+  </p>
+</div>
 
               {/* Radar chart */}
               <div className="bg-gradient-to-br from-gray-900 to-black border-4 border-cyan-500 p-8 rounded-none shadow-[12px_12px_0px_0px_rgba(78,205,196,0.2)]">
@@ -942,7 +1069,9 @@ const displayData = aggregateData || AGGREGATE_DATA;;
                   setResponses({});
                   setRatings({});
                   setRevealedRatings({});
+                  setLabelingSupport(null);
                   setQuizPhase('identify');
+                  setContinueListening({});
                 }}
                 className="bg-black hover:bg-gray-900 text-white font-black text-xl py-8 rounded-none border-4 border-gray-700 hover:border-gray-500 shadow-[12px_12px_0px_0px_rgba(255,255,255,0.1)] transition-all uppercase tracking-wider flex items-center justify-center gap-3"
               >
@@ -1175,7 +1304,9 @@ const displayData = aggregateData || AGGREGATE_DATA;;
                   setResponses({});
                   setRatings({});
                   setRevealedRatings({});
+                  setLabelingSupport(null);
                   setQuizPhase('identify');
+                  setContinueListening({});
                 }}
                 className="bg-pink-500 hover:bg-pink-600 text-white font-black text-xl py-8 rounded-none border-4 border-black shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] transition-all uppercase flex items-center justify-center gap-3"
               >
