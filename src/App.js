@@ -110,7 +110,6 @@ function App() {
   const [isPlaying, setIsPlaying] = useState(false);
   const [participantCount, setParticipantCount] = useState(0);
 const [aggregateData, setAggregateData] = useState(null);
-const [isLoadingData, setIsLoadingData] = useState(false);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const audioRef = useRef(null);
 
@@ -134,6 +133,7 @@ const [isLoadingData, setIsLoadingData] = useState(false);
   if (section === 'results' && !aggregateData) {
     loadAggregateData();
   }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
 }, [section]);
 
   const handlePlayPause = () => {
@@ -227,7 +227,6 @@ const saveResponseToFirebase = async () => {
 };
 
 const loadAggregateData = async () => {
-  setIsLoadingData(true);
   try {
     const querySnapshot = await getDocs(collection(db, 'responses'));
     const allResponses = [];
@@ -248,7 +247,6 @@ const loadAggregateData = async () => {
   } catch (error) {
     console.error("Error:", error);
   } finally {
-    setIsLoadingData(false);
   }
 };
 
