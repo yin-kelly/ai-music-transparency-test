@@ -1,6 +1,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, PieChart, Pie, Cell, ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from 'recharts';
 import { Play, Pause, RotateCcw, ChevronRight, Disc3, Sparkles, Users, AlertCircle, CheckCircle2, XCircle, Headphones, Music2, BrainCircuit, Eye } from 'lucide-react';
+import { db } from './firebase';
+import { collection, addDoc, getDocs } from 'firebase/firestore';
 
 // MOCK DATA
 const SONGS = [
@@ -106,6 +108,9 @@ function App() {
   const [revealedRatings, setRevealedRatings] = useState({});
   const [quizPhase, setQuizPhase] = useState('identify');
   const [isPlaying, setIsPlaying] = useState(false);
+  const [participantCount, setParticipantCount] = useState(0);
+const [aggregateData, setAggregateData] = useState(null);
+const [isLoadingData, setIsLoadingData] = useState(false);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const audioRef = useRef(null);
 
@@ -124,6 +129,12 @@ function App() {
     window.addEventListener('mousemove', handleMouseMove);
     return () => window.removeEventListener('mousemove', handleMouseMove);
   }, []);
+
+  useEffect(() => {
+  if (section === 'results' && !aggregateData) {
+    loadAggregateData();
+  }
+}, [section]);
 
   const handlePlayPause = () => {
     if (audioRef.current) {
@@ -175,16 +186,22 @@ function App() {
     });
   };
 
-  const handleNextReveal = () => {
-    if (currentSongIndex < SONGS.length - 1) {
-      setCurrentSongIndex(currentSongIndex + 1);
-      setIsPlaying(false);
-      if (audioRef.current) audioRef.current.pause();
-    } else {
-      setQuizPhase('complete');
-      setSection('results');
-    }
-  };
+  const handleNextReveal = async () => {
+  if (currentSongIndex < SONGS.length - 1) {
+    setCurrentSongIndex(currentSongIndex + 1);
+    setIsPlaying(false);
+    if (audioRef.current) audioRef.current.pause();
+  } else {
+    // Save to Firebase
+    await saveResponseToFirebase();
+    
+    // Load aggregate data
+    await loadAggregateData();
+    
+    setQuizPhase('complete');
+    setSection('results');
+  }
+};
 
   const calculateAccuracy = () => {
     let correct = 0;
@@ -194,6 +211,95 @@ function App() {
     });
     return Math.round((correct / SONGS.length) * 100);
   };
+
+const saveResponseToFirebase = async () => {
+  try {
+    await addDoc(collection(db, 'responses'), {
+      identifications: responses,
+      initialRatings: ratings,
+      revealedRatings: revealedRatings,
+      timestamp: new Date().toISOString()
+    });
+    console.log("Saved!");
+  } catch (error) {
+    console.error("Error:", error);
+  }
+};
+
+const loadAggregateData = async () => {
+  setIsLoadingData(true);
+  try {
+    const querySnapshot = await getDocs(collection(db, 'responses'));
+    const allResponses = [];
+    querySnapshot.forEach((doc) => allResponses.push(doc.data()));
+    
+    setParticipantCount(allResponses.length);
+    
+    if (allResponses.length === 0) {
+  setAggregateData({
+    accuracy: { overall: 0, byGenre: [] },
+    preferenceShift: [],
+    radarData: [],
+    labelingSupport: []
+  });
+    } else {
+      setAggregateData(calculateAggregateData(allResponses));
+    }
+  } catch (error) {
+    console.error("Error:", error);
+  } finally {
+    setIsLoadingData(false);
+  }
+};
+
+const calculateAggregateData = (allResponses) => {
+  let totalCorrect = 0, totalGuesses = 0;
+  const genreStats = {};
+  const preferenceData = { ai: { before: [], after: [] }, human: { before: [], after: [] }, hybrid: { before: [], after: [] } };
+
+  allResponses.forEach(r => {
+    Object.entries(r.identifications).forEach(([songId, guess]) => {
+      const song = SONGS.find(s => s.id === parseInt(songId));
+      if (song) {
+        totalGuesses++;
+        if (guess === song.actualType) totalCorrect++;
+        if (!genreStats[song.genre]) genreStats[song.genre] = { correct: 0, total: 0, color: song.color };
+        genreStats[song.genre].total++;
+        if (guess === song.actualType) genreStats[song.genre].correct++;
+      }
+    });
+
+    Object.entries(r.initialRatings).forEach(([songId, init]) => {
+      const song = SONGS.find(s => s.id === parseInt(songId));
+      const rev = r.revealedRatings[songId];
+      if (song && init.enjoyment && rev?.enjoyment) {
+        preferenceData[song.actualType].before.push((init.enjoyment + init.creativity + init.emotional) / 3);
+        preferenceData[song.actualType].after.push((rev.enjoyment + rev.creativity + rev.emotional) / 3);
+      }
+    });
+  });
+
+  const avg = (arr) => arr.length > 0 ? arr.reduce((a,b) => a+b, 0) / arr.length : 0;
+  
+  return {
+    accuracy: {
+      overall: totalGuesses > 0 ? Math.round((totalCorrect / totalGuesses) * 100) : 0,
+      byGenre: Object.entries(genreStats).map(([genre, stats]) => ({
+        genre,
+        accuracy: Math.round((stats.correct / stats.total) * 100),
+        fill: stats.color
+      }))
+    },
+    preferenceShift: [
+      { category: 'AI Music', before: parseFloat(avg(preferenceData.ai.before).toFixed(1)) || 0, after: parseFloat(avg(preferenceData.ai.after).toFixed(1)) || 0 },
+      { category: 'Human Music', before: parseFloat(avg(preferenceData.human.before).toFixed(1)) || 0, after: parseFloat(avg(preferenceData.human.after).toFixed(1)) || 0 },
+      { category: 'Hybrid', before: parseFloat(avg(preferenceData.hybrid.before).toFixed(1)) || 0, after: parseFloat(avg(preferenceData.hybrid.after).toFixed(1)) || 0 }
+    ],
+    radarData: AGGREGATE_DATA.radarData
+  };
+};
+
+const displayData = aggregateData || AGGREGATE_DATA;;
 
   return (
     <div className="min-h-screen bg-black text-white relative overflow-hidden"
@@ -269,7 +375,7 @@ function App() {
                 </p>
                 <p>
                   This study explores whether listeners can distinguish AI-generated music from human creativity, 
-                  and whether <span className="font-bold text-white">transparency changes perception and attitudes.</span>.
+                  and whether <span className="font-bold text-white">transparency changes perception and attitudes.</span>
                 </p>
               </div>
 
@@ -325,7 +431,7 @@ function App() {
                   <div className="font-mono">~12 minutes</div>
                   <div className="flex items-center gap-1">
                     <Users size={14} />
-                    27 participants
+                    {participantCount} participant{participantCount !== 1 ? 's' : ''}
                   </div>
                 </div>
               </div>
@@ -723,7 +829,7 @@ function App() {
               <div className="bg-gradient-to-br from-gray-900 to-black border-4 border-pink-500 p-8 rounded-none shadow-[12px_12px_0px_0px_rgba(255,107,157,0.2)]">
                 <h3 className="text-2xl font-black mb-6 uppercase">Accuracy by Genre</h3>
                 <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={AGGREGATE_DATA.accuracy.byGenre}>
+                  <BarChart data={displayData.accuracy.byGenre || []}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#333" />
                     <XAxis dataKey="genre" stroke="#888" style={{ fontSize: '12px', fontWeight: 'bold' }} />
                     <YAxis stroke="#888" style={{ fontSize: '12px' }} />
@@ -736,9 +842,9 @@ function App() {
                       }}
                     />
                     <Bar dataKey="accuracy" radius={[0, 0, 0, 0]}>
-                      {AGGREGATE_DATA.accuracy.byGenre.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.fill} />
-                      ))}
+                      {(displayData?.accuracy?.byGenre || []).map((entry, index) => (
+  <Cell key={`cell-${index}`} fill={entry.fill} />
+))}
                     </Bar>
                   </BarChart>
                 </ResponsiveContainer>
@@ -751,7 +857,7 @@ function App() {
               <div className="bg-gradient-to-br from-gray-900 to-black border-4 border-cyan-500 p-8 rounded-none shadow-[12px_12px_0px_0px_rgba(78,205,196,0.2)]">
                 <h3 className="text-2xl font-black mb-6 uppercase">AI vs Human Ratings</h3>
                 <ResponsiveContainer width="100%" height={300}>
-                  <RadarChart data={AGGREGATE_DATA.radarData}>
+                  <RadarChart data={displayData.radarData}>
                     <PolarGrid stroke="#333" />
                     <PolarAngleAxis dataKey="dimension" stroke="#888" style={{ fontSize: '11px', fontWeight: 'bold' }} />
                     <PolarRadiusAxis stroke="#666" />
@@ -769,7 +875,7 @@ function App() {
               <div className="bg-gradient-to-br from-gray-900 to-black border-4 border-purple-500 p-8 rounded-none shadow-[12px_12px_0px_0px_rgba(170,150,218,0.2)]">
                 <h3 className="text-2xl font-black mb-6 uppercase">Preference Shift</h3>
                 <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={AGGREGATE_DATA.preferenceShift}>
+                  <BarChart data={displayData.preferenceShift}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#333" />
                     <XAxis dataKey="category" stroke="#888" style={{ fontSize: '11px', fontWeight: 'bold' }} />
                     <YAxis domain={[0, 10]} stroke="#888" />
@@ -796,7 +902,7 @@ function App() {
                 <ResponsiveContainer width="100%" height={300}>
                   <PieChart>
                     <Pie
-                      data={AGGREGATE_DATA.labelingSupport}
+                      data={displayData.labelingSupport}
                       cx="50%"
                       cy="50%"
                       outerRadius={100}
@@ -804,9 +910,9 @@ function App() {
                       label={({ name, value }) => `${value}%`}
                       labelStyle={{ fontSize: '14px', fontWeight: 'bold', fill: '#fff' }}
                     >
-                      {AGGREGATE_DATA.labelingSupport.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.fill} />
-                      ))}
+                      {(displayData?.labelingSupport || []).map((entry, index) => (
+  <Cell key={`cell-${index}`} fill={entry.fill} />
+))}
                     </Pie>
                     <Tooltip 
                       contentStyle={{ 
