@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, PieChart, Pie, Cell, ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from 'recharts';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, PieChart, Pie, Cell, ResponsiveContainer } from 'recharts';
 import { Play, Pause, RotateCcw, ChevronRight, Disc3, Sparkles, Users, AlertCircle, CheckCircle2, XCircle, Headphones, Music2, BrainCircuit, Eye } from 'lucide-react';
 import { db } from './firebase';
 import { collection, addDoc, getDocs } from 'firebase/firestore';
@@ -229,6 +229,7 @@ const [aggregateData, setAggregateData] = useState(null);
 useEffect(() => {
   // Load participant count when component mounts
   loadAggregateData();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
 }, []);
 
   const handlePlayPause = () => {
