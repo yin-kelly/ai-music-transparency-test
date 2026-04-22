@@ -6,12 +6,72 @@ import { collection, addDoc, getDocs } from 'firebase/firestore';
 
 // MOCK DATA
 const SONGS = [
-  { id: 1, title: "Song 1 (to be added soon)", genre: "Pop", actualType: "ai", audioUrl: "https://github.com/yin-kelly/ai-music-transparency-test/raw/main/public/audio/ai-1.mp3", color: "#FF6B9D" },
-  { id: 2, title: "Song 2 (to be added soon)", genre: "Indie", actualType: "human", audioUrl: "https://github.com/yin-kelly/ai-music-transparency-test/raw/main/public/audio/human-2.mp3", color: "#4ECDC4" },
-  { id: 3, title: "Song 3 (to be added soon)", genre: "Lo-fi", actualType: "ai", audioUrl: "https://github.com/yin-kelly/ai-music-transparency-test/raw/main/public/audio/ai-3.mp3", color: "#95E1D3" },
-  { id: 4, title: "Song 4 (to be added soon)", genre: "Country", actualType: "ai", audioUrl: "https://github.com/yin-kelly/ai-music-transparency-test/raw/main/public/audio/ai-4.mp3", color: "#F38181" },
-  { id: 5, title: "Song 5 (to be added soon)", genre: "Ambient", actualType: "human", audioUrl: "https://github.com/yin-kelly/ai-music-transparency-test/raw/main/public/audio/human-5.mp3", color: "#AA96DA" },
-  { id: 6, title: "Song 6 (to be added soon)", genre: "Indie", actualType: "hybrid", audioUrl: "https://github.com/yin-kelly/ai-music-transparency-test/raw/main/public/audio/hybrid-6.mp3", color: "#FCBAD3" },
+  { 
+    id: 1, 
+    title: "Song 1",  // Generic for Phase 1 & 2
+    actualTitle: "A Little Thing Like Love",  // Real title for reveal
+    artist: "Kayla Kross",  // Real artist for reveal
+    genre: "Pop", 
+    actualType: "ai", 
+    audioUrl: "https://github.com/yin-kelly/ai-music-transparency-test/raw/main/public/audio/ai-1.mp3", 
+    color: "#FF6B9D",
+    coverArt: "/ai-1-cover.jpeg"
+  },
+  { 
+    id: 2, 
+    title: "Song 2", 
+    actualTitle: "Cross My Mind",
+    artist: "Olivia Dean",
+    genre: "Indie", 
+    actualType: "human", 
+    audioUrl: "https://github.com/yin-kelly/ai-music-transparency-test/raw/main/public/audio/human-2.mp3", 
+    color: "#4ECDC4",
+    coverArt: "/human-2-cover.jpeg"
+  },
+  { 
+    id: 3, 
+    title: "Song 3", 
+    actualTitle: "Into the Blue",
+    artist: "Sienna Rose",
+    genre: "Lo-fi", 
+    actualType: "ai", 
+    audioUrl: "https://github.com/yin-kelly/ai-music-transparency-test/raw/main/public/audio/ai-3.mp3", 
+    color: "#95E1D3",
+    coverArt: "/ai-3-cover.jpeg"
+  },
+  { 
+    id: 4, 
+    title: "Song 4", 
+    actualTitle: "A Million Colors",
+    artist: "Vinih Pray",
+    genre: "Country", 
+    actualType: "ai", 
+    audioUrl: "https://github.com/yin-kelly/ai-music-transparency-test/raw/main/public/audio/ai-4.mp3", 
+    color: "#F38181",
+    coverArt: "/ai-4-cover.jpeg"
+  },
+  { 
+    id: 5, 
+    title: "Song 5", 
+    actualTitle: "My Darling Forever",
+    artist: "Rosie & The Originals",
+    genre: "Ambient", 
+    actualType: "human", 
+    audioUrl: "https://github.com/yin-kelly/ai-music-transparency-test/raw/main/public/audio/human-5.mp3", 
+    color: "#AA96DA",
+    coverArt: "/human-5-cover.jpeg"
+  },
+  { 
+    id: 6, 
+    title: "Song 6", 
+    actualTitle: "Influence",
+    artist: "Aries Ivory (feat. Eric Bellinger)",
+    genre: "Indie", 
+    actualType: "hybrid", 
+    audioUrl: "https://github.com/yin-kelly/ai-music-transparency-test/raw/main/public/audio/hybrid-6.mp3", 
+    color: "#FCBAD3",
+    coverArt: "/hybrid-6-cover.jpeg"
+  }
 ];
 
 const AGGREGATE_DATA = {
@@ -95,6 +155,39 @@ function VinylRecord({ isPlaying, color = "#FF6B9D", size = "large" }) {
   );
 }
 
+// Navigation Bar
+function NavigationBar({ currentSection, onNavigate }) {
+  const sections = [
+  { id: 'results', label: 'Your Results', icon: Sparkles },
+  { id: 'overview', label: 'The Problem', icon: Eye },
+  { id: 'recommendations', label: 'Take Action', icon: AlertCircle },
+  { id: 'citations', label: 'Sources', icon: BrainCircuit }
+];
+
+  return (
+    <nav className="border-b-2 border-gray-800 bg-black/50 backdrop-blur-sm">
+      <div className="max-w-7xl mx-auto px-8">
+        <div className="flex items-center gap-1">
+          {sections.map(({ id, label, icon: Icon }) => (
+            <button
+              key={id}
+              onClick={() => onNavigate(id)}
+className={`px-6 py-4 font-bold uppercase text-sm tracking-wider transition-all border-b-4 ${
+  currentSection === id || (currentSection === 'quiz' && id === 'quiz')
+    ? 'border-pink-500 text-pink-500'
+    : 'border-transparent text-gray-500 hover:text-gray-300 hover:border-gray-700'
+}`}
+            >
+              <Icon size={16} className="inline mr-2" />
+              {label}
+            </button>
+          ))}
+        </div>
+      </div>
+    </nav>
+  );
+}
+
 function App() {
   const [section, setSection] = useState('intro');
   const [currentSongIndex, setCurrentSongIndex] = useState(0);
@@ -132,6 +225,11 @@ const [aggregateData, setAggregateData] = useState(null);
   }
   // eslint-disable-next-line react-hooks/exhaustive-deps
 }, [section]);
+
+useEffect(() => {
+  // Load participant count when component mounts
+  loadAggregateData();
+}, []);
 
   const handlePlayPause = () => {
     if (audioRef.current) {
@@ -283,18 +381,18 @@ const calculateAggregateData = (allResponses) => {
   const avg = (arr) => arr.length > 0 ? arr.reduce((a,b) => a+b, 0) / arr.length : 0;
   
   // Calculate labeling support percentages
-  const supportCounts = { strongly_support: 0, somewhat_support: 0, neutral: 0, oppose: 0 };
-  allResponses.forEach(r => {
-    if (r.labelingSupport) supportCounts[r.labelingSupport]++;
-  });
+const supportCounts = { ai_only: 0, ai_and_assisted: 0, neutral: 0, dont_support: 0 };
+allResponses.forEach(r => {
+  if (r.labelingSupport) supportCounts[r.labelingSupport]++;
+});
 
-  const total = allResponses.length;
-  const labelingSupport = [
-    { name: 'Strongly Support', value: total > 0 ? Math.round((supportCounts.strongly_support / total) * 100) : 68, fill: '#FF6B9D' },
-    { name: 'Somewhat Support', value: total > 0 ? Math.round((supportCounts.somewhat_support / total) * 100) : 23, fill: '#4ECDC4' },
-    { name: 'Neutral', value: total > 0 ? Math.round((supportCounts.neutral / total) * 100) : 6, fill: '#95E1D3' },
-    { name: 'Oppose', value: total > 0 ? Math.round((supportCounts.oppose / total) * 100) : 3, fill: '#F38181' }
-  ];
+const total = allResponses.length;
+const labelingSupport = [
+  { name: 'AI-Generated Only', value: total > 0 ? Math.round((supportCounts.ai_only / total) * 100) : 35, fill: '#FF6B9D' },
+  { name: 'AI-Generated & Assisted', value: total > 0 ? Math.round((supportCounts.ai_and_assisted / total) * 100) : 56, fill: '#4ECDC4' },
+  { name: 'Neutral', value: total > 0 ? Math.round((supportCounts.neutral / total) * 100) : 6, fill: '#95E1D3' },
+  { name: "Don't Support", value: total > 0 ? Math.round((supportCounts.dont_support / total) * 100) : 3, fill: '#F38181' }
+];
   // Calculate continue listening data
 const continueListeningCounts = { unlikely: 0, neutral: 0, likely: 0 };
 allResponses.forEach(r => {
@@ -363,23 +461,43 @@ const displayData = aggregateData || AGGREGATE_DATA;;
 
       {/* Header */}
       <header className="border-b-4 border-pink-500 bg-black/90 backdrop-blur-sm sticky top-0 z-40 relative">
-        <div className="max-w-7xl mx-auto px-8 py-8">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-6xl font-black tracking-tighter" style={{ 
-                background: 'linear-gradient(135deg, #FF6B9D 0%, #4ECDC4 100%)',
-                WebkitBackgroundClip: 'text',
-                WebkitTextFillColor: 'transparent',
-                fontFamily: "'Space Grotesk', sans-serif"
-              }}>
-                THE TRANSPARENCY<br/>TEST
-              </h1>
-              <p className="text-pink-400 mt-2 text-sm font-mono uppercase tracking-wider">Can AI fool the human listeners?</p>
-            </div>
-            <VinylRecord isPlaying={isPlaying} size="medium" />
-          </div>
+  <div className="max-w-7xl mx-auto pl-4 pr-8 py-6">
+    <div className="flex items-center justify-between">
+      <div className="flex items-center gap-6">
+        {/* Logo - clickable to return home */}
+        <button 
+          onClick={() => setSection('intro')}
+          className="flex-shrink-0 hover:opacity-80 transition-opacity"
+        >
+          <img 
+            src="/logo.png" 
+            alt="The Transparency Test Logo" 
+            className="h-20 w-auto"
+          />
+        </button>
+        
+        {/* Title next to logo */}
+        <div>
+          <h1 className="text-4xl font-black tracking-tight" style={{ 
+            background: 'linear-gradient(135deg, #FF6B9D 0%, #4ECDC4 100%)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            fontFamily: "'Space Grotesk', sans-serif"
+          }}>
+            AI Music Study
+          </h1>
         </div>
-      </header>
+      </div>
+      
+      <VinylRecord isPlaying={isPlaying} size="medium" />
+    </div>
+  </div>
+</header>
+
+{/* Navigation - Only show after test is complete */}
+{(section === 'results' || section === 'overview' || section === 'recommendations' || section === 'citations') && (
+  <NavigationBar currentSection={section} onNavigate={setSection} />
+)}
 
       <main className="max-w-7xl mx-auto px-8 py-16 relative z-10">
         {section === 'intro' && (
@@ -402,12 +520,13 @@ const displayData = aggregateData || AGGREGATE_DATA;;
 
               <div className="space-y-4 text-lg text-gray-300 leading-relaxed">
                 <p className="text-xl">
-                  AI music tools like <span className="text-cyan-400 font-bold">Suno</span> and <span className="text-pink-400 font-bold">Udio</span> can 
-                  now generate studio-quality tracks in seconds. But can <em>you</em> tell the difference?
+                  AI music tools like Suno and Udio can 
+                  now generate high quality songs, complete with vocals, production, and instrumentals, in seconds. 
+                  But can you tell the difference between music created by <span className="text-cyan-400 font-bold">AI</span> and music created by <span className="text-pink-400 font-bold">humans</span>?
                 </p>
                 <p>
                   This study explores whether listeners can distinguish AI-generated music from human creativity, 
-                  and whether <span className="font-bold text-white">transparency changes perception and attitudes.</span>
+                  and whether <span className="font-bold text-white">transparency changes listeners' perception and attitudes.</span>
                 </p>
               </div>
 
@@ -435,7 +554,7 @@ const displayData = aggregateData || AGGREGATE_DATA;;
                     <AlertCircle className="text-purple-400 flex-shrink-0 mt-1" size={20} />
                     <div>
                       <div className="font-bold text-white">Phase 3</div>
-                      <div className="text-gray-400">Reveal</div>
+                      <div className="text-gray-400">Reveal and re-rate</div>
                     </div>
                   </div>
                   <div className="flex items-start gap-2">
@@ -460,7 +579,7 @@ const displayData = aggregateData || AGGREGATE_DATA;;
                   <ChevronRight className="inline ml-2 group-hover:translate-x-1 transition-transform" />
                 </button>
                 <div className="text-sm text-gray-500">
-                  <div className="font-mono">~12 minutes</div>
+                  <div className="font-mono">~8 minutes</div>
                   <div className="flex items-center gap-1">
                     <Users size={14} />
                     {participantCount} participant{participantCount !== 1 ? 's' : ''}
@@ -469,12 +588,12 @@ const displayData = aggregateData || AGGREGATE_DATA;;
               </div>
             </div>
 
-            <div className="relative flex items-center justify-center">
-              <VinylRecord isPlaying={true} color="#FF6B9D" size="large" />
-              <div className="absolute -bottom-8 left-1/2 transform -translate-x-1/2 w-full">
-                <Waveform isPlaying={true} color="#4ECDC4" />
-              </div>
-            </div>
+            <div className="relative flex flex-col items-center justify-center gap-4">
+  <VinylRecord isPlaying={true} color="#FF6B9D" size="large" />
+  <div className="w-full flex justify-center">
+    <Waveform isPlaying={true} color="#4ECDC4" />
+  </div>
+</div>
           </div>
         )}
 
@@ -687,21 +806,38 @@ const displayData = aggregateData || AGGREGATE_DATA;;
               <div className="bg-gradient-to-br from-gray-900 to-black border-4 border-yellow-500 p-8 rounded-none shadow-[12px_12px_0px_0px_rgba(255,217,61,0.3)]">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
                   <div className="flex flex-col items-center">
-                    <VinylRecord isPlaying={isPlaying} color={currentSong.color} size="medium" />
-                    <div className="mt-4 text-center">
-                      <h4 className="text-2xl font-black">{currentSong.title}</h4>
-                    </div>
-                    <audio ref={audioRef} onEnded={() => setIsPlaying(false)}>
-                      <source src={currentSong.audioUrl} type="audio/mpeg" />
-                    </audio>
-                    <button
-                      onClick={handlePlayPause}
-                      className="mt-4 bg-white text-black font-black py-2 px-6 rounded-none border-2 border-black flex items-center gap-2"
-                    >
-                      {isPlaying ? <Pause size={16} /> : <Play size={16} />}
-                      {isPlaying ? 'Pause' : 'Listen'}
-                    </button>
-                  </div>
+  {/* Album Cover */}
+  <div className="relative w-64 h-64 mb-4">
+    <img 
+      src={currentSong.coverArt} 
+      alt={`${currentSong.actualTitle} cover art`}
+      className="w-full h-full object-cover rounded-none border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,0.5)]"
+    />
+    {/* Play button overlay */}
+    <button
+      onClick={handlePlayPause}
+      className="absolute inset-0 flex items-center justify-center bg-black/50 hover:bg-black/30 transition-all group"
+    >
+      {isPlaying ? (
+        <Pause className="text-white group-hover:scale-110 transition-transform" size={64} />
+      ) : (
+        <Play className="text-white group-hover:scale-110 transition-transform" size={64} />
+      )}
+    </button>
+  </div>
+  
+  {/* Song Info - Real Title & Artist */}
+  <div className="text-center">
+    <h4 className="text-2xl font-black mb-1" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+      {currentSong.actualTitle}
+    </h4>
+    <p className="text-gray-400 text-lg">{currentSong.artist}</p>
+  </div>
+  
+  <audio ref={audioRef} onEnded={() => setIsPlaying(false)}>
+    <source src={currentSong.audioUrl} type="audio/mpeg" />
+  </audio>
+</div>
 
                   <div className="space-y-4">
                     <div className={`border-4 p-6 rounded-none ${
@@ -827,7 +963,7 @@ const displayData = aggregateData || AGGREGATE_DATA;;
                   disabled={!revealedRatings[currentSong.id] || Object.keys(revealedRatings[currentSong.id]).length < 2 || ((currentSong.actualType === 'ai' || currentSong.actualType === 'hybrid') && !continueListening[currentSong.id])}
                   className="w-full bg-yellow-500 hover:bg-yellow-600 disabled:bg-gray-800 text-black disabled:text-gray-600 font-black text-xl py-6 rounded-none border-4 border-black disabled:border-gray-700 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] transition-all uppercase flex items-center justify-center gap-2"
                 >
-                  {currentSongIndex < SONGS.length - 1 ? 'Next Song' : 'See Results'}
+                  {currentSongIndex < SONGS.length - 1 ? 'Next Song' : 'Next'}
                   <ChevronRight size={24} />
                 </button>
               </div>
@@ -917,8 +1053,12 @@ const displayData = aggregateData || AGGREGATE_DATA;;
                 {calculateAccuracy()}%
               </div>
               <p className="text-2xl text-gray-400">
-                Identification Accuracy <span className="text-gray-600 font-mono text-lg">(avg: 58%)</span>
-              </p>
+  Identification Accuracy {participantCount > 0 && (
+    <span className="text-gray-600 font-mono text-lg">
+      (avg: {displayData.accuracy.overall}%)
+    </span>
+  )}
+</p>
             </div>
 
             {/* Song breakdown */}
@@ -974,27 +1114,60 @@ const displayData = aggregateData || AGGREGATE_DATA;;
     </BarChart>
   </ResponsiveContainer>
   <p className="text-sm text-gray-500 mt-4 font-mono">
-    💡 After learning the truth, X% are unlikely to continue listening to AI music
-  </p>
+  💡 After learning the truth, {displayData.continueListeningData?.[0]?.percentage || 0}% are unlikely to continue listening to AI music
+</p>
 </div>
 
-              {/* Radar chart */}
-              <div className="bg-gradient-to-br from-gray-900 to-black border-4 border-cyan-500 p-8 rounded-none shadow-[12px_12px_0px_0px_rgba(78,205,196,0.2)]">
-                <h3 className="text-2xl font-black mb-6 uppercase">AI vs Human Ratings</h3>
-                <ResponsiveContainer width="100%" height={300}>
-                  <RadarChart data={displayData.radarData}>
-                    <PolarGrid stroke="#333" />
-                    <PolarAngleAxis dataKey="dimension" stroke="#888" style={{ fontSize: '11px', fontWeight: 'bold' }} />
-                    <PolarRadiusAxis stroke="#666" />
-                    <Radar name="AI Music" dataKey="ai" stroke="#FF6B9D" fill="#FF6B9D" fillOpacity={0.3} strokeWidth={3} />
-                    <Radar name="Human Music" dataKey="human" stroke="#4ECDC4" fill="#4ECDC4" fillOpacity={0.3} strokeWidth={3} />
-                    <Legend wrapperStyle={{ fontSize: '12px', fontWeight: 'bold' }} />
-                  </RadarChart>
-                </ResponsiveContainer>
-                <p className="text-sm text-gray-500 mt-4 font-mono">
-                  💡 Human music rated higher on creativity & authenticity
-                </p>
-              </div>
+              {/* AI vs Human Ratings */}
+<div className="bg-gradient-to-br from-gray-900 to-black border-4 border-cyan-500 p-8 rounded-none shadow-[12px_12px_0px_0px_rgba(78,205,196,0.2)]">
+  <h3 className="text-2xl font-black mb-6 uppercase">AI vs Human Ratings</h3>
+  <ResponsiveContainer width="100%" height={300}>
+    <BarChart 
+      data={[
+        { 
+          dimension: 'Enjoyment', 
+          'AI Music': displayData.radarData?.[0]?.ai || 0, 
+          'Human Music': displayData.radarData?.[0]?.human || 0 
+        },
+        { 
+          dimension: 'Creativity', 
+          'AI Music': displayData.radarData?.[1]?.ai || 0, 
+          'Human Music': displayData.radarData?.[1]?.human || 0 
+        }
+      ]}
+      layout="vertical"
+      margin={{ left: 20 }}
+    >
+      <CartesianGrid strokeDasharray="3 3" stroke="#333" />
+      <XAxis type="number" domain={[0, 10]} stroke="#888" style={{ fontSize: '12px' }} />
+      <YAxis dataKey="dimension" type="category" stroke="#888" style={{ fontSize: '12px', fontWeight: 'bold' }} />
+      <Tooltip 
+        contentStyle={{ 
+          backgroundColor: '#000', 
+          border: '2px solid #4ECDC4',
+          borderRadius: 0,
+          fontWeight: 'bold'
+        }}
+      />
+      <Legend wrapperStyle={{ fontSize: '12px', fontWeight: 'bold' }} />
+      <Bar dataKey="AI Music" fill="#FF6B9D" />
+      <Bar dataKey="Human Music" fill="#4ECDC4" />
+    </BarChart>
+  </ResponsiveContainer>
+  <p className="text-sm text-gray-500 mt-4 font-mono">
+    💡 {(() => {
+      const enjoymentDiff = (displayData.radarData?.[0]?.human || 0) - (displayData.radarData?.[0]?.ai || 0);
+      const creativityDiff = (displayData.radarData?.[1]?.human || 0) - (displayData.radarData?.[1]?.ai || 0);
+      const avgDiff = (enjoymentDiff + creativityDiff) / 2;
+      
+      return avgDiff > 0 
+        ? 'Human music rated higher on enjoyment and creativity'
+        : avgDiff < 0
+        ? 'AI music rated higher on enjoyment and creativity'
+        : 'Human and AI music rated equally on enjoyment and creativity';
+    })()}
+  </p>
+</div>
 
               {/* Preference shift */}
               <div className="bg-gradient-to-br from-gray-900 to-black border-4 border-purple-500 p-8 rounded-none shadow-[12px_12px_0px_0px_rgba(170,150,218,0.2)]">
@@ -1017,8 +1190,20 @@ const displayData = aggregateData || AGGREGATE_DATA;;
                   </BarChart>
                 </ResponsiveContainer>
                 <p className="text-sm text-gray-500 mt-4 font-mono">
-                  💡 AI music ratings dropped 24% after truth revealed
-                </p>
+  💡 AI music ratings {
+    (() => {
+      const aiMusic = displayData.preferenceShift?.find(d => d.category === 'AI Music');
+      if (!aiMusic) return 'data pending';
+      const change = aiMusic.before - aiMusic.after;
+      const percent = aiMusic.before > 0 ? Math.round((change / aiMusic.before) * 100) : 0;
+      return change > 0 
+        ? `dropped ${percent}% after truth revealed`
+        : change < 0
+        ? `increased ${Math.abs(percent)}% after truth revealed`
+        : 'stayed the same after truth revealed';
+    })()
+  }
+</p>
               </div>
 
               {/* Labeling support */}
@@ -1049,19 +1234,25 @@ const displayData = aggregateData || AGGREGATE_DATA;;
                   </PieChart>
                 </ResponsiveContainer>
                 <p className="text-sm text-gray-500 mt-4 font-mono">
-                  💡 91% support mandatory AI music labeling
-                </p>
+  💡 {(() => {
+    const support = displayData.labelingSupport || [];
+    const aiOnly = support.find(s => s.name === 'AI-Generated Only')?.value || 0;
+    const aiAndAssisted = support.find(s => s.name === 'AI-Generated & Assisted')?.value || 0;
+    const total = aiOnly + aiAndAssisted;
+    return `${total}% support some level of mandatory AI music labeling`;
+  })()}
+</p>
               </div>
             </div>
 
             {/* CTA buttons */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <button
-                onClick={() => setSection('policy')}
-                className="bg-pink-500 hover:bg-pink-600 text-white font-black text-xl py-8 rounded-none border-4 border-black shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] transition-all uppercase tracking-wider"
-              >
-                View Policy Recommendations →
-              </button>
+  onClick={() => setSection('overview')}
+  className="bg-pink-500 hover:bg-pink-600 text-white font-black text-xl py-8 rounded-none border-4 border-black shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] transition-all uppercase tracking-wider"
+>
+  Learn More & Take Action →
+</button>
               <button
                 onClick={() => {
                   setSection('intro');
@@ -1082,240 +1273,780 @@ const displayData = aggregateData || AGGREGATE_DATA;;
           </div>
         )}
 
-        {section === 'policy' && (
-          <div className="space-y-12">
-            <div className="text-center">
-              <div className="text-7xl font-black mb-4" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
-                POLICY
-                <br />
-                <span style={{
-                  background: 'linear-gradient(135deg, #FF6B9D 0%, #4ECDC4 100%)',
-                  WebkitBackgroundClip: 'text',
-                  WebkitTextFillColor: 'transparent'
-                }}>
-                  RECOMMENDATIONS
-                </span>
-              </div>
-              <p className="text-xl text-gray-400">Evidence-based framework for AI music accountability</p>
-            </div>
+        {section === 'overview' && (
+  <div className="space-y-16">
+    {/* Hero */}
+    <div className="text-center">
+      <div className="text-7xl font-black mb-4" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+        THE
+        <br />
+        <span style={{
+          background: 'linear-gradient(135deg, #FF6B9D 0%, #4ECDC4 100%)',
+          WebkitBackgroundClip: 'text',
+          WebkitTextFillColor: 'transparent'
+        }}>
+          PROBLEM
+        </span>
+      </div>
+    </div>
 
-            {/* Key findings */}
-            <div className="bg-gradient-to-br from-pink-500/10 to-purple-500/10 border-4 border-pink-500 p-10 rounded-none shadow-[16px_16px_0px_0px_rgba(255,107,157,0.2)]">
-              <h3 className="text-3xl font-black mb-6 uppercase flex items-center gap-3">
-                <AlertCircle className="text-pink-500" size={36} />
-                Key Findings
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-lg">
-                <div className="flex items-start gap-3">
-                  <div className="w-2 h-2 rounded-full bg-pink-500 mt-3 flex-shrink-0" />
-                  <p className="text-gray-300">Listeners perform only <span className="font-black text-white">slightly better than chance</span> at identifying AI music (58% accuracy)</p>
-                </div>
-                <div className="flex items-start gap-3">
-                  <div className="w-2 h-2 rounded-full bg-cyan-500 mt-3 flex-shrink-0" />
-                  <p className="text-gray-300"><span className="font-black text-white">It can be dependent on genre.</span> Lo-fi hardest to detect, country easiest</p>
-                </div>
-                <div className="flex items-start gap-3">
-                  <div className="w-2 h-2 rounded-full bg-purple-500 mt-3 flex-shrink-0" />
-                  <p className="text-gray-300">Having transparency changes listeners' perception of the music: ratings drop <span className="font-black text-white">24% for AI music</span> once origin is known</p>
-                </div>
-                <div className="flex items-start gap-3">
-                  <div className="w-2 h-2 rounded-full bg-yellow-500 mt-3 flex-shrink-0" />
-                  <p className="text-gray-300"><span className="font-black text-white">91% support</span> mandatory labeling despite low detection accuracy</p>
-                </div>
-              </div>
-            </div>
-
-            {/* Policy sections */}
-            <div className="space-y-8">
-              {[
-                {
-                  number: "01",
-                  title: "Mandatory Labeling Standards",
-                  color: "#FF6B9D",
-                  icon: AlertCircle,
-                  content: (
-                    <>
-                      <p className="text-gray-300 mb-4 text-lg">
-                        Streaming platforms must require clear AI-generated music labels visible on track pages, similar to "Explicit Content" warnings.
-                      </p>
-                      <div className="bg-black/50 border-l-4 border-pink-500 p-6 space-y-3">
-                        <div>
-                          <span className="font-black text-pink-400">Tiered System:</span>
-                          <ul className="mt-2 space-y-2 text-gray-400">
-                            <li className="flex items-start gap-2">
-                              <span className="text-pink-500">▸</span>
-                              <span>"AI-Generated" - Fully created by AI tools</span>
-                            </li>
-                            <li className="flex items-start gap-2">
-                              <span className="text-pink-500">▸</span>
-                              <span>"AI-Assisted" - Human artists using AI for production</span>
-                            </li>
-                            <li className="flex items-start gap-2">
-                              <span className="text-pink-500">▸</span>
-                              <span>"Human-Created" - No AI involvement</span>
-                            </li>
-                          </ul>
-                        </div>
-                        <div>
-                          <span className="font-black text-pink-400">Enforcement:</span>
-                          <p className="text-gray-400 mt-2">Platform accountability for verification, with penalties for intentional mislabeling</p>
-                        </div>
-                      </div>
-                    </>
-                  )
-                },
-                {
-                  number: "02",
-                  title: "Platform Accountability",
-                  color: "#4ECDC4",
-                  icon: Users,
-                  content: (
-                    <>
-                      <div className="space-y-4 text-gray-300">
-                        <div className="bg-black/50 border-l-4 border-cyan-500 p-5">
-                          <div className="font-black text-cyan-400 mb-2">Upload Verification</div>
-                          <p className="text-gray-400">Implement processes to prevent fraudulent attribution of AI music to human artists</p>
-                        </div>
-                        <div className="bg-black/50 border-l-4 border-cyan-500 p-5">
-                          <div className="font-black text-cyan-400 mb-2">Algorithmic Transparency</div>
-                          <p className="text-gray-400">Disclose when playlists heavily feature AI-generated content</p>
-                        </div>
-                        <div className="bg-black/50 border-l-4 border-cyan-500 p-5">
-                          <div className="font-black text-cyan-400 mb-2">Royalty Differentiation</div>
-                          <p className="text-gray-400">Consider different monetization structures to protect human artist income</p>
-                        </div>
-                      </div>
-                    </>
-                  )
-                },
-                {
-                  number: "03",
-                  title: "Artist Protection",
-                  color: "#AA96DA",
-                  icon: Sparkles,
-                  content: (
-                    <>
-                      <div className="space-y-4 text-gray-300">
-                        <div className="flex items-start gap-4">
-                          <div className="w-8 h-8 rounded-none bg-purple-500/20 border-2 border-purple-500 flex items-center justify-center flex-shrink-0">
-                            <span className="font-black text-purple-400">→</span>
-                          </div>
-                          <div>
-                            <div className="font-black text-white mb-1">Voice/Style Rights</div>
-                            <p className="text-gray-400">Artists have the right to opt out of voice and style replication by AI tools</p>
-                          </div>
-                        </div>
-                        <div className="flex items-start gap-4">
-                          <div className="w-8 h-8 rounded-none bg-purple-500/20 border-2 border-purple-500 flex items-center justify-center flex-shrink-0">
-                            <span className="font-black text-purple-400">→</span>
-                          </div>
-                          <div>
-                            <div className="font-black text-white mb-1">Copyright Enhancement</div>
-                            <p className="text-gray-400">Strengthen protections for artists whose work is used in AI training datasets</p>
-                          </div>
-                        </div>
-                        <div className="flex items-start gap-4">
-                          <div className="w-8 h-8 rounded-none bg-purple-500/20 border-2 border-purple-500 flex items-center justify-center flex-shrink-0">
-                            <span className="font-black text-purple-400">→</span>
-                          </div>
-                          <div>
-                            <div className="font-black text-white mb-1">Discoverability Support</div>
-                            <p className="text-gray-400">Platform algorithms should support human artist discoverability</p>
-                          </div>
-                        </div>
-                      </div>
-                    </>
-                  )
-                },
-                {
-                  number: "04",
-                  title: "Balancing Innovation",
-                  color: "#FFD93D",
-                  icon: BrainCircuit,
-                  content: (
-                    <>
-                      <p className="text-gray-300 mb-4 text-lg">
-                        AI music tools offer legitimate benefits and should not be banned outright:
-                      </p>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        {[
-                          { title: "Accessibility", desc: "For musicians with disabilities" },
-                          { title: "Prototyping", desc: "Rapid creative exploration" },
-                          { title: "Education", desc: "Teaching composition & production" }
-                        ].map((item, i) => (
-                          <div key={i} className="bg-black/50 border-2 border-yellow-500 p-4">
-                            <div className="font-black text-yellow-400 mb-2">{item.title}</div>
-                            <p className="text-gray-400 text-sm">{item.desc}</p>
-                          </div>
-                        ))}
-                      </div>
-                      <div className="bg-yellow-500/10 border-l-4 border-yellow-500 p-6 mt-6">
-                        <p className="text-gray-300">
-                          <span className="font-black text-white">Framework:</span> Distinguish between AI as a <em>tool</em> (supplementing human creativity) 
-                          versus AI as <em>replacement</em> (displacing human artists). Policy should enable the former while 
-                          regulating the latter through transparency requirements.
-                        </p>
-                      </div>
-                    </>
-                  )
-                }
-              ].map((section) => (
-                <div key={section.number} className="bg-gradient-to-br from-gray-900 to-black border-4 p-8 rounded-none"
-                     style={{ borderColor: section.color, boxShadow: `12px 12px 0px 0px ${section.color}40` }}>
-                  <div className="flex items-start gap-6 mb-6">
-                    <div className="text-7xl font-black text-gray-800">{section.number}</div>
-                    <div className="flex-1">
-                      <h3 className="text-3xl font-black uppercase mb-2 flex items-center gap-3">
-                        <section.icon size={32} style={{ color: section.color }} />
-                        {section.title}
-                      </h3>
-                    </div>
-                  </div>
-                  {section.content}
-                </div>
-              ))}
-            </div>
-
+    {/* Background Context */}
+    <div className="bg-gradient-to-br from-gray-900 to-black border-4 border-pink-500 p-10 rounded-none shadow-[16px_16px_0px_0px_rgba(255,107,157,0.2)]">
+      <h3 className="text-3xl font-black mb-6 uppercase flex items-center gap-3">
+        <AlertCircle className="text-pink-500" size={36} />
+        The Current AI Music Landscape
+      </h3>
+      <div className="space-y-6 text-lg text-gray-300">
+        <p>
+          AI tools like <span className="font-bold text-white">Suno</span> and <span className="font-bold text-white">Udio</span> can now generate high quality music in seconds. 
+          While this technology offers exciting possibilities for the creative industry, it also introduces some serious risks to both artists and listeners.
+        </p>
         
-            {/* Conclusion */}
-            <div className="bg-gradient-to-r from-pink-500 to-cyan-500 p-1 rounded-none">
-              <div className="bg-black p-10">
-                <h4 className="text-3xl font-black mb-4 uppercase">The Bottom Line</h4>
-                <p className="text-xl text-gray-300 leading-relaxed">
-                  This research demonstrates that listeners <span className="font-black text-white">cannot reliably detect AI music</span> and 
-                  <span className="font-black text-white">strongly support transparency</span>. Mandatory labeling protects consumer choice, 
-                  supports human artists, and enables responsible AI innovation.
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="bg-black/50 border-l-4 border-pink-500 p-6">
+            <div className="text-5xl font-black text-pink-500 mb-2">50K+</div>
+            <p className="text-gray-400 text-base">AI-generated songs uploaded to streaming platforms <span className="font-bold text-white">daily</span></p>
+          </div>
+          <div className="bg-black/50 border-l-4 border-cyan-500 p-6">
+            <div className="text-5xl font-black text-cyan-500 mb-2">34%</div>
+            <p className="text-gray-400 text-base">Of all new daily uploads are <span className="font-bold text-white">fully AI-generated</span></p>
+          </div>
+          <div className="bg-black/50 border-l-4 border-purple-500 p-6">
+            <div className="text-5xl font-black text-purple-500 mb-2">0</div>
+            <p className="text-gray-400 text-base">Major streaming platforms require and enforce <span className="font-bold text-white">consistent AI labeling</span></p>
+          </div>
+        </div>
+
+        <p className="text-base text-gray-400 italic border-l-4 border-yellow-500 pl-4 py-2">
+          When consumers stream music on major platforms like Spotify and Apple Music, they receive no information about whether tracks were created by human musicians or AI systems.
+        </p>
+      </div>
+    </div>
+
+    {/* AI Music Tiers */}
+    <div className="bg-gradient-to-br from-gray-900 to-black border-4 border-cyan-500 p-10 rounded-none shadow-[16px_16px_0px_0px_rgba(78,205,196,0.2)]">
+      <h3 className="text-3xl font-black mb-6 uppercase flex items-center gap-3">
+        <BrainCircuit className="text-cyan-500" size={36} />
+        Tiers of AI Usage in Music Generation
+      </h3>
+      <p className="text-gray-400 mb-8 text-lg">
+        Not all AI involvement in music is the same. A big policy question is if we should treat fully AI-generated songs the same as songs that only use AI for production. There's a spectrum of human-to-AI contribution:
+      </p>
+
+      <div className="space-y-6">
+        {[
+          {
+            tier: "Fully AI-Generated",
+            icon: "🤖",
+            color: "#FF6B9D",
+            description: "Songs created entirely by AI systems with no human musical input",
+            examples: "Generated completely by text prompts on Suno or Udio",
+            concern: "Directly displaces and takes advantage of human artists and floods platforms with zero-cost content"
+          },
+          {
+            tier: "Hybrid Creation",
+            icon: "✨",
+            color: "#AA96DA",
+            description: "Music where both AI and humans contribute meaningfully to the creative process",
+            examples: "AI generates melody, human adds lyrics and arrangement, or AI creates backing tracks for human vocals",
+            concern: "Depends case-by-case on how much AI contributed to the song, hard to regulate"
+          },
+          {
+            tier: "AI-Assisted Production",
+            icon: "⚙️",
+            color: "#4ECDC4",
+            description: "Music primarily created by humans, with AI used as a supporting tool in the production process",
+            examples: "AI-assisted mixing, sound enhancement, or vocal tuning",
+            concern: "Can be difficult to define where tool assistance ends and actual contribution begins"
+          },
+          {
+            tier: "Human-Created",
+            icon: "👤",
+            color: "#FFD93D",
+            description: "Music composed and produced by humans without any use of AI",
+            examples: "Traditional songwriting, studio recording, and instrumentals",
+            concern: "Used to train AI systems without artist consent"
+          }
+        ].map((tier, index) => (
+          <div key={index} className="bg-black/50 border-4 p-6 rounded-none"
+               style={{ borderColor: tier.color, boxShadow: `6px 6px 0px 0px ${tier.color}40` }}>
+            <div className="flex items-start gap-4">
+              <div className="text-5xl flex-shrink-0">{tier.icon}</div>
+              <div className="flex-1">
+                <h4 className="text-2xl font-black mb-2" style={{ color: tier.color }}>
+                  {tier.tier}
+                </h4>
+                <p className="text-white font-bold mb-3">{tier.description}</p>
+                <div className="space-y-2 text-sm">
+                  <div>
+                    <span className="text-gray-500 font-mono">Examples:</span>
+                    <p className="text-gray-400">{tier.examples}</p>
+                  </div>
+                  <div>
+                    <span className="text-gray-500 font-mono">Policy Concern:</span>
+                    <p className="text-gray-400">{tier.concern}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="mt-8 bg-yellow-500/10 border-l-4 border-yellow-500 p-6">
+        <p className="text-yellow-200 font-bold">
+          In discussions of AI music labeling, many platforms currently treat all these tiers the same. 
+          As we move toward labeling AI songs on streaming platforms, we need to think about how the level of AI usage in the song needs to be disclosed as well.
+          However, it will be difficult to draw the lines between these many tiers.
+        </p>
+      </div>
+    </div>
+
+    {/* The Stakes */}
+    <div className="bg-gradient-to-br from-pink-500/10 to-purple-500/10 border-4 border-pink-500 p-10 rounded-none shadow-[16px_16px_0px_0px_rgba(255,107,157,0.2)]">
+      <h3 className="text-3xl font-black mb-6 uppercase flex items-center gap-3">
+        <Sparkles className="text-pink-500" size={36} />
+        How Does This Affect Musicians & Listeners
+      </h3>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-lg">
+        <div className="bg-black/50 border-l-4 border-pink-500 p-6">
+          <div className="font-black text-white mb-2 text-xl">🎵 Artist Displacement</div>
+          <p className="text-gray-400 text-base">
+            AI music floods streaming platforms at near-zero cost. Once AI models are trained, they can produce unlimited songs with no marginal cost. 
+            Human artists who invest in training, studio time, and living expenses cannot fairly compete with AI systems.
+          </p>
+        </div>
+        <div className="bg-black/50 border-l-4 border-cyan-500 p-6">
+          <div className="font-black text-white mb-2 text-xl">🎭 Voice & Style Theft</div>
+          <p className="text-gray-400 text-base">
+            AI systems train on copyrighted music without artist consent or compensation. Artists' unique voices and styles can be replicated, 
+            undermining the value of their creative work. Furthermore, they are not compensated, recognized, or credited for AI-generated songs based on their work.
+          </p>
+        </div>
+        <div className="bg-black/50 border-l-4 border-purple-500 p-6">
+          <div className="font-black text-white mb-2 text-xl">👥 Consumer Deception</div>
+          <p className="text-gray-400 text-base">
+            Listeners cannot tell what music is AI-generated, preventing informed choice about which artists they want to support. 
+            When consumers stream music, they typically assume they are supporting human artists and engaging with authentic creative expression.
+          </p>
+        </div>
+        <div className="bg-black/50 border-l-4 border-yellow-500 p-6">
+          <div className="font-black text-white mb-2 text-xl">💰 Economic Pressure</div>
+          <p className="text-gray-400 text-base">
+            Algorithmic recommendations and playlist placements determine which music generates streams and revenue. 
+            AI-generated content unfairly competes with human artists for algorithmic attention on streaming platforms because AI systems are able to produce such a large quantity of music.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    {/* This Study */}
+    <div className="bg-gradient-to-br from-gray-900 to-black border-4 border-purple-500 p-10 rounded-none shadow-[16px_16px_0px_0px_rgba(170,150,218,0.2)]">
+      <h3 className="text-3xl font-black mb-6 uppercase flex items-center gap-3">
+        <Eye className="text-purple-500" size={36} />
+        This Experiment
+      </h3>
+      <div className="space-y-6 text-lg text-gray-300">
+        <div>
+          <div className="font-black text-white mb-3">Research Question</div>
+          <p className="text-gray-400">
+            Can listeners distinguish AI-generated music and hybrid AI-assisted music from human-created music, and does transparency about a song's origins 
+            affect their perception and attitudes toward the song?
+          </p>
+        </div>
+        
+        <div>
+          <div className="font-black text-white mb-3">Methodology</div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="bg-black/50 border-2 border-purple-500 p-5">
+              <div className="font-black text-purple-400 mb-2">Phase 1: Blind Identification</div>
+              <p className="text-gray-400 text-sm">
+                Participants listen to {SONGS.length} songs and identify each as AI-generated, human-made, or hybrid.
+              </p>
+            </div>
+            <div className="bg-black/50 border-2 border-purple-500 p-5">
+              <div className="font-black text-purple-400 mb-2">Phase 2: Blind Rating</div>
+              <p className="text-gray-400 text-sm">
+                Participants rate each song on enjoyment and creativity without knowing its origin.
+              </p>
+            </div>
+            <div className="bg-black/50 border-2 border-purple-500 p-5">
+              <div className="font-black text-purple-400 mb-2">Phase 3: Revealed Re-Rating</div>
+              <p className="text-gray-400 text-sm">
+                After finding out whether or not the song used AI, participants re-rate to 
+                measure how transparency changes their perception.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {/* Key Findings Preview */}
+    <div className="bg-gradient-to-br from-gray-900 to-black border-4 border-yellow-500 p-10 rounded-none shadow-[16px_16px_0px_0px_rgba(255,217,61,0.2)]">
+      <h3 className="text-3xl font-black mb-6 uppercase flex items-center gap-3">
+        <CheckCircle2 className="text-yellow-500" size={36} />
+        What The Results Show
+      </h3>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-lg">
+        <div className="flex items-start gap-3">
+          <div className="w-2 h-2 rounded-full bg-pink-500 mt-3 flex-shrink-0" />
+          <p className="text-gray-300">
+            <span className="font-black text-white">Detection is difficult for many listeners:</span> Average accuracy was {displayData.accuracy.overall}%,
+             showing that most people can't tell the difference between AI-generated and human-made music.
+          </p>
+        </div>
+        <div className="flex items-start gap-3">
+          <div className="w-2 h-2 rounded-full bg-cyan-500 mt-3 flex-shrink-0" />
+          <p className="text-gray-300">
+            <span className="font-black text-white">Transparency is an important factor:</span> Once the songs' origins were disclosed, the ratings for AI-generated music {
+              (() => {
+                const aiMusic = displayData.preferenceShift?.find(d => d.category === 'AI Music');
+                if (!aiMusic || aiMusic.before === 0) return 'changed significantly';
+                const change = aiMusic.before - aiMusic.after;
+                const percent = Math.round((change / aiMusic.before) * 100);
+                return change > 0 ? `dropped ${percent}%.` : `increased ${Math.abs(percent)}%.`;
+              })()
+            }
+          </p>
+        </div>
+        <div className="flex items-start gap-3">
+          <div className="w-2 h-2 rounded-full bg-purple-500 mt-3 flex-shrink-0" />
+          <p className="text-gray-300">
+            <span className="font-black text-white">Strong support for labeling and disclosure:</span> {
+              (() => {
+                const support = displayData.labelingSupport || [];
+                const aiOnly = support.find(s => s.name === 'AI-Generated Only')?.value || 0;
+                const aiAndAssisted = support.find(s => s.name === 'AI-Generated & Assisted')?.value || 0;
+                return aiOnly + aiAndAssisted;
+              })()
+            }% support some form of mandatory AI music labeling.
+          </p>
+        </div>
+        <div className="flex items-start gap-3">
+          <div className="w-2 h-2 rounded-full bg-yellow-500 mt-3 flex-shrink-0" />
+          <p className="text-gray-300">
+            <span className="font-black text-white">Sentiment towards AI music is generally negative:</span> {displayData.continueListeningData?.[0]?.percentage || 0}% 
+            unlikely to continue listening to the song after learning that it's AI-generated.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    {/* Call to Action */}
+    <div className="text-center">
+      <div className="bg-gradient-to-r from-pink-500 to-cyan-500 p-1 rounded-none inline-block">
+        <div className="bg-black px-8 py-4">
+          <p className="text-xl text-white font-bold">
+            Listeners are bad at detecting AI-generated music, and they want clear labels on streaming platforms.
+          </p>
+        </div>
+      </div>
+      <div className="mt-8">
+        <button
+          onClick={() => setSection('recommendations')}
+          className="bg-pink-500 hover:bg-pink-600 text-white font-black text-2xl px-16 py-8 rounded-none border-4 border-black shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] hover:shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] transition-all uppercase tracking-wider"
+        >
+          What Can We Do? →
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
+        {section === 'recommendations' && (
+  <div className="space-y-16">
+    {/* Hero */}
+    <div className="text-center">
+      <div className="text-7xl font-black mb-4" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+        TAKE
+        <br />
+        <span style={{
+          background: 'linear-gradient(135deg, #FF6B9D 0%, #4ECDC4 100%)',
+          WebkitBackgroundClip: 'text',
+          WebkitTextFillColor: 'transparent'
+        }}>
+          ACTION
+        </span>
+      </div>
+    </div>
+
+    {/* Two Column Layout */}
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+      
+      {/* LEFT COLUMN: Policy Recommendations */}
+      <div className="space-y-8">
+        <div className="bg-gradient-to-br from-pink-500/10 to-purple-500/10 border-4 border-pink-500 p-8 rounded-none shadow-[12px_12px_0px_0px_rgba(255,107,157,0.2)]">
+          <h3 className="text-3xl font-black mb-4 uppercase flex items-center gap-3">
+            <AlertCircle className="text-pink-500" size={32} />
+            Policy Recommendations
+          </h3>
+        </div>
+
+        {/* Policy Cards - ALL PINK */}
+        {/* Card 1: Congressional Pressure on FTC */}
+        <div className="bg-gradient-to-br from-gray-900 to-black border-4 border-pink-500 p-6 rounded-none shadow-[8px_8px_0px_0px_rgba(255,107,157,0.3)]">
+          <h4 className="text-xl font-black uppercase mb-1 text-pink-400">
+            Congressional Pressure on the FTC
+          </h4>
+          
+          <p className="text-gray-300 mb-4">
+            There should be an investigation into whether or not streaming platforms' failure to disclose AI-generated music is a deceptive trade practice under 
+            <span className="font-bold text-pink-400"> Section 5 
+            of the FTC Act.</span> When consumers stream music, they reasonably assume tracks are human-created, unless told otherwise. Listeners expect authentic human creativity and expression from the music they listen to, and they deserve to have the knowledge needed in order to make an informed consumer choice.
+          </p>
+
+          <div className="bg-black/50 border-l-4 border-pink-500 p-4 mb-4">
+            <div className="space-y-3 text-sm">
+              <div>
+                <span className="font-bold text-white">Build Congressional Coalition:</span>
+                <p className="text-gray-400 mt-1">
+                  Members of the House Energy & Commerce Committee should draft a joint letter to the Chair of the FTC, requesting formal investigation into whether platforms' 
+                  non-disclosure constitutes deceptive practices.
+                </p>
+              </div>
+              <div>
+                <span className="font-bold text-white">FTC Investigation:</span>
+                <p className="text-gray-400 mt-1">
+                  FTC opens consumer protection investigation into major streaming platforms such as Spotify, Apple Music, and Amazon Music.
+                </p>
+              </div>
+              <div>
+                <span className="font-bold text-white">Ideal Outcome:</span>
+                <p className="text-gray-400 mt-1">
+                  Platforms agree to labeling requirements to avoid litigation. Non-compliance triggers penalties for companies.
                 </p>
               </div>
             </div>
+          </div>
+        </div>
 
-            {/* CTA */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <button
-                onClick={() => setSection('results')}
-                className="bg-black hover:bg-gray-900 text-white font-black text-xl py-8 rounded-none border-4 border-gray-700 hover:border-gray-500 transition-all uppercase"
-              >
-                ← Back to Results
-              </button>
-              <button
-                onClick={() => {
-                  setSection('intro');
-                  setCurrentSongIndex(0);
-                  setResponses({});
-                  setRatings({});
-                  setRevealedRatings({});
-                  setLabelingSupport(null);
-                  setQuizPhase('identify');
-                  setContinueListening({});
-                }}
-                className="bg-pink-500 hover:bg-pink-600 text-white font-black text-xl py-8 rounded-none border-4 border-black shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] transition-all uppercase flex items-center justify-center gap-3"
-              >
-                <RotateCcw size={24} />
-                Restart Test
-              </button>
+        {/* Card 2: Coalition Building */}
+        <div className="bg-gradient-to-br from-gray-900 to-black border-4 border-pink-500 p-6 rounded-none shadow-[8px_8px_0px_0px_rgba(255,107,157,0.3)]">
+          <h4 className="text-xl font-black uppercase mb-1 text-pink-400">
+            Multi-Stakeholder Coalition
+          </h4>
+          
+          <p className="text-gray-300 mb-4">
+            We need to build consensus across multiple diverse stakeholders in order to develop policy proposals based on consensus.
+          </p>
+
+          <div className="bg-black/50 border-l-4 border-pink-500 p-4 mb-4">
+            <div className="font-black text-pink-400 mb-2 text-sm">Who Needs to Align:</div>
+            <div className="space-y-3 text-sm">
+              <div>
+                <span className="font-bold text-white">Music Industry Groups:</span>
+                <p className="text-gray-400 mt-1">
+                  EX: Recording Industry Association of America (RIAA), American Federation of Musicians (AFM), 
+                  Artists Rights Alliance, Future of Music Coalition (to represent artists' economic interests)
+                </p>
+              </div>
+              <div>
+                <span className="font-bold text-white">Consumer Advocacy Organizations:</span>
+                <p className="text-gray-400 mt-1">
+                  EX: Consumer Reports, Consumer Federation of America, National Association of Consumer Advocates (to represent listeners'/consumers' rights to informed choice)
+                </p>
+              </div>
+              <div>
+                <span className="font-bold text-white">Tech Policy Experts:</span>
+                <p className="text-gray-400 mt-1">
+                  EX: Center for Democracy & Technology, Technology Policy Institute (to provide implementation and policy guidance)
+                </p>
+              </div>
             </div>
           </div>
-        )}
+
+          <div className="bg-black/50 border-l-4 border-pink-500 p-4">
+            <div className="font-black text-pink-400 mb-2 text-sm">They should work on:</div>
+            <ul className="space-y-1 text-gray-400 text-sm ml-4">
+              <li>• Creating joint policy principles on AI music transparency</li>
+              <li>• Discussing what a tiered AI music labeling system might look like, and how it could be implemented</li>
+              <li>• Technical standards for label implementation (where labels will be visible, how to enforce labels with artists)</li>
+              <li>• Unified testimony for congressional hearings</li>
+            </ul>
+          </div>
+        </div>
+
+        {/* Card 3: Public Pressure Campaign */}
+        <div className="bg-gradient-to-br from-gray-900 to-black border-4 border-pink-500 p-6 rounded-none shadow-[8px_8px_0px_0px_rgba(255,107,157,0.3)]">
+          <h4 className="text-xl font-black uppercase mb-1 text-pink-400">
+            Public Awareness Campaign
+          </h4>
+          
+          <p className="text-gray-300 mb-4">
+            Most people don't know AI music exists at scale on streaming platforms. Public awareness creates more pressure 
+            on both platforms and legislators to take action.
+          </p>
+
+          <div className="bg-black/50 border-l-4 border-pink-500 p-4 mb-4">
+            <div className="space-y-3 text-sm">
+              <div>
+                <span className="font-bold text-white">Artist Testimonials:</span>
+                <p className="text-gray-400 mt-1">
+                  Working musicians can share their stories of frustration with AI music gaining more traction, algorithmic displacement of their music, and AI voice cloning without consent. More artists are starting to speak up about this topic and also call for labels on streaming platforms. 
+                  Some want this specifically to resolve rumors that their own songs are AI-generated.
+                </p>
+              </div>
+              <div>
+                <span className="font-bold text-white">User Testimonials:</span>
+                <p className="text-gray-400 mt-1">
+                  Many listeners on social media describe feeling deceived and confused after unknowingly streaming AI content. More testimonials and experiences from listeners should be included in news campaigns about this topic to highlight that consumers actually care to know whether the songs they are listening to are made by AI.
+                </p>
+              </div>
+              <div>
+                <span className="font-bold text-white">Media Coverage:</span>
+                <p className="text-gray-400 mt-1">
+                  Major news outlets should conduct investigative journalism on the scale of AI music, how platforms might disproportionately profit from undisclosed AI content, and
+                  the economic impact on musicians.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* RIGHT COLUMN: Individual Actions */}
+      <div className="space-y-8">
+        <div className="bg-gradient-to-br from-cyan-500/10 to-yellow-500/10 border-4 border-cyan-500 p-8 rounded-none shadow-[12px_12px_0px_0px_rgba(78,205,196,0.2)]">
+          <h3 className="text-3xl font-black mb-4 uppercase flex items-center gap-3">
+            <Users className="text-cyan-500" size={32} />
+            What You Can Do
+          </h3>
+        </div>
+
+        {/* Action Cards - ALL CYAN */}
+        {/* Action 1: Sign Petition */}
+        <div className="bg-gradient-to-br from-gray-900 to-black border-4 border-cyan-500 p-6 rounded-none shadow-[8px_8px_0px_0px_rgba(78,205,196,0.3)]">
+          <div className="flex items-start gap-4">
+            <div className="w-12 h-12 flex items-center justify-center bg-cyan-500/20 border-2 border-cyan-500 rounded-none flex-shrink-0">
+              <AlertCircle className="text-cyan-500" size={24} />
+            </div>
+            <div className="flex-1">
+              <h4 className="text-xl font-black uppercase mb-1 text-cyan-400">
+                Sign the Petition
+              </h4>
+             
+              <p className="text-gray-300 mb-4 text-sm">
+                The <span className="font-bold text-white">Protect Working Musicians Act</span> allows independent musicians to collectively negotiate fair compensation and terms with dominant streaming and distribution platforms. Add your name to show Congress there's public support.
+              </p>
+
+              {/* SPACE FOR PETITION IMAGE - ADD YOUR IMAGE HERE */}
+              <div className="bg-black/50 border-2 border-cyan-500 p-4 mb-4 text-center">
+                <p className="text-gray-500 text-sm italic"><img src="https://static.openpetition.de/images/petition/support-the-protect-working-musicians-act_1771362375_desktop.jpg?1771362375" alt="Protect Working Musicians Act Petition" className="w-full rounded-none" /></p>
+                {/* When you're ready, replace the above with:
+                <img src="https://static.openpetition.de/images/petition/support-the-protect-working-musicians-act_1771362375_desktop.jpg?1771362375" alt="Protect Working Musicians Act Petition" className="w-full rounded-none" />
+                */}
+              </div>
+
+              <a 
+                href="https://www.openpetition.org/us/petition/argumente/support-the-protect-working-musicians-act" 
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-block w-full bg-cyan-500 hover:bg-cyan-600 text-black font-black px-8 py-4 rounded-none border-4 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] transition-all uppercase text-sm text-center"
+              >
+                Sign the Petition →
+              </a>
+
+            </div>
+          </div>
+        </div>
+
+        {/* Action 2: Support Deezer */}
+        <div className="bg-gradient-to-br from-gray-900 to-black border-4 border-cyan-500 p-6 rounded-none shadow-[8px_8px_0px_0px_rgba(78,205,196,0.3)]">
+          <div className="flex items-start gap-4">
+            <div className="w-12 h-12 flex items-center justify-center bg-cyan-500/20 border-2 border-cyan-500 rounded-none flex-shrink-0">
+              <Music2 className="text-cyan-500" size={24} />
+            </div>
+            <div className="flex-1">
+              <h4 className="text-xl font-black uppercase mb-1 text-cyan-400">
+                Support the right platforms
+              </h4>
+              
+              <p className="text-gray-300 mb-4 text-sm">
+                <span className="font-bold text-white">Deezer</span> became the first streaming platform to implement an 
+                AI tagging system, clearly labeling AI-generated tracks. While the implementation is not yet perfect, they've shown that transparency in the age of AI music is technically 
+                feasible, if streaming platforms choose to take action.
+              </p>
+
+              <div className="bg-black/50 border-l-4 border-cyan-500 p-4 mb-4">
+                <div className="font-black text-cyan-400 mb-2 text-sm">What You Can Do:</div>
+                <ul className="space-y-2 text-sm text-gray-300">
+                  <li className="flex items-start gap-2">
+                    <span className="text-cyan-400 font-bold">•</span>
+                    <span>Publicly praise Deezer's transparency on social media and raise awareness about steps that are being taken</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-cyan-400 font-bold">•</span>
+                    <span>Tag @Spotify @AppleMusic asking why they haven't implemented similar systems</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-cyan-400 font-bold">•</span>
+                    <span>If you're willing to switch, try out Deezer to test their AI labeling system</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-cyan-400 font-bold">•</span>
+                    <span>Share Deezer's approach with friends who care about supporting human artists</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Action 3: Spread Awareness */}
+        <div className="bg-gradient-to-br from-gray-900 to-black border-4 border-cyan-500 p-6 rounded-none shadow-[8px_8px_0px_0px_rgba(78,205,196,0.3)]">
+          <div className="flex items-start gap-4">
+            <div className="w-12 h-12 flex items-center justify-center bg-cyan-500/20 border-2 border-cyan-500 rounded-none flex-shrink-0">
+              <Headphones className="text-cyan-500" size={24} />
+            </div>
+            <div className="flex-1">
+              <h4 className="text-xl font-black uppercase mb-1 text-cyan-400">
+                Spread Awareness
+              </h4>
+              
+              <p className="text-gray-300 mb-4 text-sm">
+                Most people have no idea that tens of thousands of AI-generated songs are uploaded to streaming platforms everyday. 
+                In order to have positive change in this AI music space, the general public needs to be aware of what is going on and how this is affecting them.
+              </p>
+
+              <div className="bg-black/50 border-l-4 border-cyan-500 p-4 mb-4">
+                <div className="font-black text-cyan-400 mb-2 text-sm">Share This Study:</div>
+                <p className="text-gray-300 text-sm mb-3">
+                  Send this website to independent musicians, music fans, tech policy followers, etc., so we can continue collecting data about consumers' attitudes towards AI music!
+                </p>
+              </div>
+
+              <div className="bg-black/50 border-l-4 border-cyan-500 p-4 mb-4">
+                <div className="font-black text-cyan-400 mb-2 text-sm">Listen Critically:</div>
+                <ul className="space-y-2 text-sm text-gray-300">
+                  <li className="flex items-start gap-2">
+                    <span className="text-cyan-400">→</span>
+                    <span>When you listen to a new artist, check their profile. Do they have social media, past posts, pictures that look AI-generated?</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-cyan-400">→</span>
+                    <span>Question artists with vast discographies (hundreds of tracks uploaded in weeks or months)</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-cyan-400">→</span>
+                    <span>Start listening for common AI music tells (generic lyrics, slightly robotic/not-smooth voice, unnatural phrasing)</span>
+                  </li>
+                </ul>
+              </div>
+
+              <div className="bg-black/50 border-l-4 border-cyan-500 p-4">
+                <div className="font-black text-cyan-400 mb-2 text-sm">Support Human Artists:</div>
+                <ul className="space-y-1 text-sm text-gray-300 ml-4">
+                  <li>• Buy music or merch directly from small independent musicians</li>
+                  <li>• Attend their live shows</li>
+                  <li>• Follow and share artists you love</li>
+                  <li>• Recommend human working musicians to friends</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {/* Bottom Line */}
+    <div className="bg-gradient-to-r from-pink-500 to-cyan-500 p-1 rounded-none">
+      <div className="bg-black p-10 text-center">
+        <h4 className="text-3xl font-black mb-4 uppercase">We want Responsible Integration of AI in the music industry</h4>
+        <p className="text-xl text-gray-300 leading-relaxed max-w-4xl mx-auto">
+          This research demonstrates that <span className="font-black text-white">listeners cannot reliably detect AI music</span> ({displayData.accuracy.overall}% accuracy) 
+          but <span className="font-black text-white">strongly support some level of mandatory AI music labeling</span> ({
+            (() => {
+              const support = displayData.labelingSupport || [];
+              const aiOnly = support.find(s => s.name === 'AI-Generated Only')?.value || 0;
+              const aiAndAssisted = support.find(s => s.name === 'AI-Generated & Assisted')?.value || 0;
+              return aiOnly + aiAndAssisted;
+            })()
+          }% in favor). 
+          Being transparent about when AI was used to create music protects consumer choice, supports working musicians, and enables responsible AI innovation.
+        </p>
+      </div>
+    </div>
+
+    {/* Navigation */}
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <button
+        onClick={() => setSection('overview')}
+        className="bg-black hover:bg-gray-900 text-white font-black text-xl py-8 rounded-none border-4 border-gray-700 hover:border-gray-500 transition-all uppercase"
+      >
+        ← Back to Overview
+      </button>
+      <button
+        onClick={() => setSection('citations')}
+        className="bg-pink-500 hover:bg-pink-600 text-white font-black text-xl py-8 rounded-none border-4 border-black shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] transition-all uppercase"
+      >
+        View Sources →
+      </button>
+    </div>
+  </div>
+)}
+
+
+  {section === 'citations' && (
+  <div className="space-y-12">
+    {/* Hero */}
+    <div className="text-center">
+      <div className="text-7xl font-black mb-4" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
+        WORKS
+        <br />
+        <span style={{
+          background: 'linear-gradient(135deg, #FF6B9D 0%, #4ECDC4 100%)',
+          WebkitBackgroundClip: 'text',
+          WebkitTextFillColor: 'transparent'
+        }}>
+          CITED
+        </span>
+      </div>
+    </div>
+
+    {/* Research & Policy Sources */}
+    <div className="bg-gradient-to-br from-gray-900 to-black border-4 border-pink-500 p-10 rounded-none shadow-[16px_16px_0px_0px_rgba(255,107,157,0.2)]">
+      <div className="space-y-4">
+        {[
+          {
+            title: "Federal Trade Commission Enforcement Authority",
+            url: "https://www.ftc.gov/about-ftc/mission/enforcement-authority",
+            org: "FTC"
+          },
+          {
+            title: "Deezer-Ipsos Survey",
+            url: "https://newsroom-deezer.com/2025/11/deezer-ipsos-survey-ai-music/",
+            org: "Deezer"
+          },
+          {
+            title: "Spotify Strengthens AI Protections",
+            url: "https://newsroom.spotify.com/2025-09-25/spotify-strengthens-ai-protections/",
+            org: "Spotify Newsroom"
+          },
+          {
+            title: "Warner Music Signs Deal with AI Music Startup Suno, Settles Lawsuit",
+            url: "https://techcrunch.com/2025/11/25/warner-music-signs-deal-with-ai-music-startup-suno-settles-lawsuit/",
+            org: "TechCrunch"
+          },
+          {
+            title: "AI Music Floods Spotify and Reaches Billboard Charts",
+            url: "https://www.theguardian.com/technology/2025/nov/13/ai-music-spotify-billboard-charts",
+            org: "The Guardian"
+          },
+          {
+            title: "How Does AI Music Work? Benefits, Creativity, and Production on Spotify",
+            url: "https://www.vox.com/the-highlight/358201/how-does-ai-music-work-benefits-creativity-production-spotify",
+            org: "Vox"
+          },
+          {
+            title: "The Impact of AI-Generated Music",
+            url: "https://council.rollingstone.com/blog/the-impact-of-ai-generated-music/",
+            org: "Rolling Stone Council"
+          },
+          {
+            title: "Spotify Tightens AI Policy and Trims Catalog",
+            url: "https://www.forbes.com/sites/billrosenblatt/2025/09/26/spotify-tightens-ai-policy-and-trims-catalog/",
+            org: "Forbes"
+          },
+          {
+            title: "Opinion: Spotify's AI-Generated Music Problem",
+            url: "https://www.latimes.com/opinion/story/2026-02-18/spotify-ai-generated-music",
+            org: "Los Angeles Times"
+          },
+          {
+            title: "AI Disruption Could Cut Creator Earnings",
+            url: "https://finance.yahoo.com/news/ai-disruption-could-cut-creator-053339720.html",
+            org: "Yahoo Finance"
+          }
+        ].map((source, index) => (
+          <div key={index} className="border-l-4 border-pink-500 pl-6 py-3 bg-black/30 hover:bg-black/50 transition-colors">
+            <div className="text-gray-300">
+              <div className="font-bold text-white mb-1">{source.title}</div>
+              <div className="text-sm text-gray-500 mb-2">{source.org}</div>
+              <a 
+                href={source.url} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="text-cyan-400 hover:text-cyan-300 underline text-sm break-all"
+              >
+                {source.url}
+              </a>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+
+    {/* Music Sources */}
+    <div className="bg-gradient-to-br from-gray-900 to-black border-4 border-purple-500 p-10 rounded-none shadow-[16px_16px_0px_0px_rgba(170,150,218,0.2)]">
+      <h3 className="text-2xl font-black mb-6 uppercase flex items-center gap-3">
+        <Music2 className="text-purple-500" size={32} />
+        Music Sources
+      </h3>
+      <div className="space-y-3">
+        {[
+          { title: "A Little Thing Like Love", artist: "Kayla Kross" },
+          { title: "Cross My Mind", artist: "Olivia Dean" },
+          { title: "Into the Blue", artist: "Sienna Rose" },
+          { title: "A Million Colors", artist: "Vinih Pray" },
+          { title: "My Darling Forever", artist: "Rosie & The Originals" },
+          { title: "Influence (feat. Eric Bellinger)", artist: "Aries Ivory" }
+        ].map((track, index) => (
+          <div key={index} className="border-l-4 border-purple-500 pl-6 py-2 bg-black/30">
+            <div className="text-gray-300">
+              <span className="font-bold text-white">"{track.title}"</span>
+              <span className="text-gray-500"> by {track.artist}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+
+    {/* Technical Implementation */}
+    <div className="bg-gradient-to-br from-gray-900 to-black border-4 border-yellow-500 p-10 rounded-none shadow-[16px_16px_0px_0px_rgba(255,217,61,0.2)]">
+      <h3 className="text-2xl font-black mb-6 uppercase flex items-center gap-3">
+        <Sparkles className="text-yellow-500" size={32} />
+        Technical Sources
+      </h3>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-gray-300">
+        <div>
+          <span className="font-black text-white">Claude AI used for coding assistance</span>
+        </div>
+      </div>
+    </div>
+
+    {/* Navigation */}
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <button
+        onClick={() => setSection('recommendations')}
+        className="bg-black hover:bg-gray-900 text-white font-black text-xl py-8 rounded-none border-4 border-gray-700 hover:border-gray-500 transition-all uppercase"
+      >
+        ← Back to Recommendations
+      </button>
+      <button
+        onClick={() => {
+          setSection('intro');
+          setCurrentSongIndex(0);
+          setResponses({});
+          setRatings({});
+          setRevealedRatings({});
+          setLabelingSupport(null);
+          setQuizPhase('identify');
+          setContinueListening({});
+        }}
+        className="bg-pink-500 hover:bg-pink-600 text-white font-black text-xl py-8 rounded-none border-4 border-black shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] transition-all uppercase flex items-center justify-center gap-3"
+      >
+        <RotateCcw size={24} />
+        Restart Test
+      </button>
+    </div>
+
+    {/* Footer Credit */}
+    <div className="text-center text-gray-600 text-sm font-mono pt-8 border-t border-gray-800">
+      Created by Kelly Yin • Duke University CS 255 • Spring 2026
+    </div>
+  </div>
+)}
       </main>
 
       {/* Footer */}
@@ -1324,9 +2055,9 @@ const displayData = aggregateData || AGGREGATE_DATA;;
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div>
               <h2 className="text-3xl font-black mb-2" style={{ fontFamily: "'Space Grotesk', sans-serif" }}>
-                THE TRANSPARENCY TEST
+                AI Music Study
               </h2>
-              <p className="text-gray-500 font-mono text-sm">A study on AI music platform accountability</p>
+              <p className="text-gray-500 font-mono text-sm">Focused on AI music platform accountability</p>
             </div>
             <div className="text-right">
               <p className="text-gray-400">Kelly Yin</p>
